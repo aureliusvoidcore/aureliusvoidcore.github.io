@@ -1,0 +1,85 @@
+name: Build cvc5 WebAssembly
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'CVC5.md'
+      - '.github/workflows/build-cvc5-wasm.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git cmake python3
+
+      - name: Setup Emscripten SDK
+        shell: bash
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install 3.1.18
+          ./emsdk activate 3.1.18
+          echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
+
+      - name: Build cvc5 (WASM)
+        shell: bash
+        run: |
+          source $GITHUB_ENV
+          git clone --depth=1 https://github.com/cvc5/cvc5.git
+          cd cvc5
+          ./configure.sh --static --static-binary --auto-download --wasm=JS --wasm-flags='-s MODULARIZE' --name=build-wasm
+          cd build-wasm
+          make -j2
+          mkdir -p $GITHUB_WORKSPACE/out
+          cp bin/cvc5.js bin/cvc5.wasm $GITHUB_WORKSPACE/out/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cvc5-wasm
+          path: out/
+
+  create-pr:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cvc5-wasm
+          path: out
+
+      - name: Add WASM artifacts to assets
+        run: |
+          mkdir -p assets/cvc5
+          cp out/cvc5.js out/cvc5.wasm assets/cvc5/
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: update/cvc5-wasm
+          commit-message: "Add cvc5 WebAssembly artifacts (cvc5.js, cvc5.wasm)"
+          title: "Add cvc5 WebAssembly artifacts"
+          body: |
+            This PR adds the built cvc5 WebAssembly artifacts under assets/cvc5/ for the web UI.
+
+            Built via Emscripten 3.1.18 with --wasm=JS and -s MODULARIZE.
+
+            After merging, you can open the CVC5 interface at:
+            {{ site.baseurl }}/pages/formal-verification/cvc5
+          add-paths: |
+            assets/cvc5/cvc5.js
+            assets/cvc5/cvc5.wasm

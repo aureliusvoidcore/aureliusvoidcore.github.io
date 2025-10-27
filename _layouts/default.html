@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title | default: site.title }}</title>
+  <meta name="description" content="{{ page.excerpt | default: site.description | strip_newlines | escape }}">
+  <meta property="og:title" content="{{ page.title | default: site.title }}">
+  <meta property="og:description" content="{{ page.excerpt | default: site.description | strip_newlines | escape }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ site.url }}{{ page.url }}">
+  <link rel="icon" href="{{ site.baseurl }}/assets/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/main.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/syntax.css">
+</head>
+<body class="crt-bg">
+  <div class="scanlines" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="container">
+      <div class="header-row">
+        <h1 class="site-title glitch" data-text="{{ site.title }}">{{ site.title }}<span class="blinking-cursor">|</span></h1>
+      </div>
+      <p class="site-tag">{{ site.description }}</p>
+      <nav class="nav">
+        <a href="{{ site.baseurl }}/" class="nav-link">Home</a>
+        <a href="{{ site.baseurl }}/pages/formal-verification" class="nav-link">Formal Verification</a>
+        <a href="{{ site.baseurl }}/pages/fpga" class="nav-link">FPGA</a>
+        <a href="{{ site.baseurl }}/pages/systemc" class="nav-link">SystemC</a>
+        <a href="{{ site.baseurl }}/pages/mathematics" class="nav-link">Mathematics</a>
+        <a href="{{ site.baseurl }}/blog" class="nav-link">Blog</a>
+      </nav>
+    </div>
+  </header>
+  <!-- Always-visible Control Panel -->
+  <aside class="control-panel" aria-label="Control Panel">
+    <div class="cp-header">Theme Manager</div>
+    <div class="control-tabs" role="tablist" aria-label="Theme Manager Categories">
+      <button class="tab-button" role="tab" aria-selected="true" data-tab="themes">Themes</button>
+      <button class="tab-button" role="tab" aria-selected="false" data-tab="colors">Colors</button>
+      <button class="tab-button" role="tab" aria-selected="false" data-tab="effects">Effects</button>
+      <button class="tab-button" role="tab" aria-selected="false" data-tab="animations">Animations</button>
+      <button class="tab-button" role="tab" aria-selected="false" data-tab="presets">Presets</button>
+    </div>
+    <!-- Themes -->
+    <section class="cp-section tab-pane" data-tab-panel="themes" role="tabpanel">
+      <label for="cp-theme">Theme</label>
+      <select id="cp-theme" class="cp-select">
+        <option value="neon">Neon Cyberpunk</option>
+        <option value="matrix">Anime Matrix</option>
+        <option value="rainbow">Rainbow Sweep</option>
+        <option value="laser">Laser Beam</option>
+        <option value="amber">Amber Terminal</option>
+        <option value="synthwave">Synthwave</option>
+        <option value="rog">ROG Crimson</option>
+        <option value="win98">Windows 98</option>
+        <option value="amiga">Amiga Workbench</option>
+        <option value="mac">Macintosh Classic</option>
+      </select>
+    </section>
+    <!-- Colors -->
+    <section class="cp-section tab-pane is-hidden" data-tab-panel="colors" role="tabpanel" aria-hidden="true">
+      <div class="cp-row"><label for="cp-accent1">Primary</label><input id="cp-accent1" type="color" value="#00ffff" /></div>
+      <div class="cp-row"><label for="cp-accent2">Secondary</label><input id="cp-accent2" type="color" value="#00ff88" /></div>
+      <div class="cp-row"><label for="cp-accent3">Accent</label><input id="cp-accent3" type="color" value="#ff00ff" /></div>
+    </section>
+    <!-- Effects -->
+    <section class="cp-section tab-pane is-hidden" data-tab-panel="effects" role="tabpanel" aria-hidden="true">
+      <div class="cp-row">
+        <label class="cp-toggle-label" for="cp-lights">Lights</label>
+        <button id="cp-lights" class="toggle" aria-pressed="false" title="Toggle lights">
+          <span class="toggle-knob" aria-hidden="true"></span>
+          <span class="toggle-label-off">Off</span>
+          <span class="toggle-label-on">On</span>
+        </button>
+      </div>
+      <div class="cp-row"><label for="cp-grid">Grid Size</label><input id="cp-grid" type="range" min="16" max="80" step="4" value="40" /></div>
+      <div class="cp-row"><label for="cp-scan">Scanlines</label><input id="cp-scan" type="checkbox" checked /></div>
+      <div class="cp-row"><label for="cp-bg-color">Background</label><input id="cp-bg-color" type="color" value="#05060a" /></div>
+      <div class="cp-row"><label for="cp-bg-brightness">Brightness</label><input id="cp-bg-brightness" type="range" min="0" max="70" step="1" value="0" /></div>
+    </section>
+    <!-- Animations -->
+    <section class="cp-section tab-pane is-hidden" data-tab-panel="animations" role="tabpanel" aria-hidden="true">
+      <div id="cp-section-laser"><label for="cp-laser-mode">Laser Mode</label>
+        <select id="cp-laser-mode" class="cp-select">
+          <option value="sweep">Sweep</option>
+          <option value="sine">Sine</option>
+          <option value="square">Square</option>
+          <option value="triangle">Triangle</option>
+          <option value="saw">Sawtooth</option>
+          <option value="lissajous">Lissajous</option>
+          <option value="qam">QAM Constellation</option>
+          <option value="eye">Eye Diagram</option>
+          <option value="fft">FFT Bars</option>
+        </select>
+      </div>
+      <div id="cp-section-rainbow" class="cp-row">
+        <label for="cp-rainbow-speed">Rainbow Speed</label>
+        <input id="cp-rainbow-speed" type="range" min="0.2" max="3" step="0.1" value="1.0" />
+      </div>
+    </section>
+    <!-- Presets -->
+    <section class="cp-section tab-pane is-hidden" data-tab-panel="presets" role="tabpanel" aria-hidden="true">
+      <div class="cp-row"><button id="cp-preset-blue" class="button">Blue/Green</button><button id="cp-preset-violet" class="button">Violet/Pink</button></div>
+      <div class="cp-row"><button id="cp-preset-miami" class="button">Miami</button><button id="cp-preset-alien" class="button">Alien</button></div>
+      <div class="cp-row"><button id="cp-preset-amber" class="button">Amber</button><button id="cp-preset-synth" class="button">Synth</button></div>
+      <div class="cp-row"><button id="cp-preset-rog" class="button">ROG</button><button id="cp-preset-tealpurple" class="button">Teal/Purple</button></div>
+      <div class="cp-row"><button id="cp-reset" class="button">Reset</button></div>
+    </section>
+  </aside>
+  <canvas id="matrix-canvas" class="matrix-canvas" aria-hidden="true"></canvas>
+  <canvas id="laser-canvas" class="laser-canvas" aria-hidden="true"></canvas>
+  <main class="container">
+    {{ content }}
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; {{ site.time | date: "%Y" }} — {{ site.title }}</p>
+    </div>
+  </footer>
+  <script src="{{ site.baseurl }}/assets/js/main.js"></script>
+</body>
+</html>

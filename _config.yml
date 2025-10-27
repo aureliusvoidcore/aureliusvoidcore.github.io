@@ -1,0 +1,17 @@
+title: Aurelius Voidcore
+description: A site for Markdown-based blogging
+baseurl: ""
+url: "https://aureliusvoidcore.github.io"
+permalink: /:title/
+markdown: kramdown
+highlighter: rouge
+collections:
+  posts:
+    output: true
+    permalink: /blog/:year/:month/:day/:title
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"

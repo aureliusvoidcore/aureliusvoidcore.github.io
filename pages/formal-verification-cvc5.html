@@ -1,0 +1,79 @@
+---
+layout: default
+title: CVC5 Web (WASM)
+permalink: /pages/formal-verification/cvc5
+---
+
+<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/cvc5.css">
+
+<h2>CVC5 WebAssembly Interface</h2>
+<p class="meta">Run SMT-LIB and SyGuS queries directly in the browser using a WebAssembly build of <a href="https://cvc5.github.io/" target="_blank" rel="noopener">cvc5</a>. Place <code>cvc5.js</code> and <code>cvc5.wasm</code> under <code>assets/cvc5/</code> in this site to enable execution.</p>
+
+<div class="cvc5-wrap">
+  <div class="cvc5-col">
+    <div class="cvc5-card">
+      <h3>Editor</h3>
+      <textarea id="cvc5-input" class="cvc5-textarea" placeholder="Enter SMT-LIB v2 or SyGuS v2 here..."></textarea>
+      <div class="cvc5-actions">
+        <button id="cvc5-run" class="button">Run</button>
+        <button id="cvc5-clear" class="button">Clear</button>
+        <label class="button" style="cursor:pointer;">
+          Upload<input id="cvc5-file" type="file" accept=".smt2,.sy,.txt" style="display:none;" />
+        </label>
+        <button id="cvc5-dl-out" class="button">Download Output</button>
+        <span id="cvc5-status" class="cvc5-status">Initializing...</span>
+      </div>
+    </div>
+    <div class="cvc5-card">
+      <h3>Output</h3>
+      <pre id="cvc5-output" class="cvc5-pre"></pre>
+    </div>
+  </div>
+  <div class="cvc5-col">
+    <div class="cvc5-card">
+      <h3>Options</h3>
+      <div class="cvc5-row"><label for="cvc5-lang">Language</label>
+        <select id="cvc5-lang" class="cp-select">
+          <option value="auto">Auto</option>
+          <option value="smt2">SMT-LIB v2</option>
+          <option value="sygus2">SyGuS v2</option>
+        </select>
+      </div>
+      <div class="cvc5-row"><label for="cvc5-logic">Logic</label><input id="cvc5-logic" type="text" placeholder="e.g., QF_BV, ALL" /></div>
+      <div class="cvc5-row"><label for="cvc5-timeout">Timeout (ms)</label><input id="cvc5-timeout" type="number" min="0" step="100" value="0" /></div>
+      <div class="cvc5-row"><label for="cvc5-seed">Random Seed</label><input id="cvc5-seed" type="number" min="0" step="1" value="0" /></div>
+      <div class="cvc5-row"><label for="cvc5-bv-sat">BV SAT Solver</label>
+        <select id="cvc5-bv-sat" class="cp-select">
+          <option value="">Default</option>
+          <option value="cadical">CaDiCaL</option>
+          <option value="cryptominisat">CryptoMiniSat</option>
+        </select>
+      </div>
+      <div class="cvc5-row"><label></label>
+        <label><input id="cvc5-models" type="checkbox" /> Produce Models</label>
+        <label><input id="cvc5-unsat" type="checkbox" /> Unsat Cores</label>
+      </div>
+      <div class="cvc5-row"><label></label>
+        <label><input id="cvc5-incremental" type="checkbox" /> Incremental</label>
+        <label><input id="cvc5-strings-exp" type="checkbox" /> Strings Experimental</label>
+      </div>
+      <div class="cvc5-row"><label for="cvc5-extra">Extra Flags</label><input id="cvc5-extra" type="text" placeholder="Any additional CLI flags..." /></div>
+    </div>
+    <div class="cvc5-card">
+      <h3>Examples</h3>
+      <div class="cvc5-row">
+        <select id="cvc5-example" class="cp-select">
+          <option value="smt">SMT: QF_BV model</option>
+          <option value="sygus">SyGuS: synth f(x,y)</option>
+        </select>
+        <button id="cvc5-load" class="button">Load</button>
+      </div>
+    </div>
+    <div class="cvc5-card">
+      <h3>Stats</h3>
+      <pre id="cvc5-stats" class="cvc5-pre"></pre>
+    </div>
+  </div>
+</div>
+
+<script src="{{ site.baseurl }}/assets/js/cvc5-ui.js"></script>
