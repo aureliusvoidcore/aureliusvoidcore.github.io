@@ -1,0 +1,86 @@
+---
+layout: default
+title: CVC5 Harness
+permalink: /pages/cvc5-harness
+---
+
+<h1>CVC5 Minimal Harness</h1>
+<p>This page runs a tiny SMT-LIB script through the WASM build and prints the result below.</p>
+
+<div>
+  <button id="h-run">Run Harness</button>
+</div>
+<pre id="h-out" style="min-height: 6em; padding: 1em; background: var(--panel-bg, #111); color: var(--text, #ddd);"></pre>
+<pre id="h-stats" style="min-height: 2em; padding: 1em; background: var(--panel-bg, #111); color: var(--muted, #aaa);"></pre>
+
+<script>
+(function(){
+  const outEl = document.getElementById('h-out');
+  const statsEl = document.getElementById('h-stats');
+  const btn = document.getElementById('h-run');
+  const baseurl = (function(){ try { return (document.querySelector('link[rel="icon"]').href || '').replace(/\/assets.*$/, ''); } catch { return ''; } })();
+  const JS = baseurl + '/assets/cvc5/cvc5.js';
+  const WASM = baseurl + '/assets/cvc5/cvc5.wasm';
+
+  const SMT = [
+    '(set-logic QF_BV)',
+    '(declare-fun a () (_ BitVec 8))',
+    '(declare-fun b () (_ BitVec 8))',
+    '(assert (= (bvadd a b) #x2a))',
+    '(check-sat)',
+    '(get-model)'
+  ].join('\n');
+
+  function append(el, s){ el.textContent += s + '\n'; }
+  function clear(el){ el.textContent = ''; }
+
+  async function run(){
+    clear(outEl); clear(statsEl);
+    const t0 = performance.now();
+    const out = []; const err = [];
+
+    // Provide Module before loading the script; auto-run with args
+    let resolved = false;
+    const done = (code)=>{
+      if (resolved) return; resolved = true;
+      window.prompt = originalPrompt;
+      const dt = (performance.now() - t0).toFixed(1);
+      append(outEl, out.join('\n'));
+      if (err.length) append(outEl, '\n[stderr]\n' + err.join('\n'));
+      statsEl.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms';
+    };
+
+    window.Module = {
+      noInitialRun: false,
+      noExitRuntime: false,
+      arguments: ['-'],
+      locateFile: (p)=> p.endsWith('.wasm') ? WASM : p,
+      print: (txt)=> out.push(String(txt)),
+      printErr: (txt)=> err.push(String(txt)),
+      // onExit may not fire due to glue forcing noExitRuntime=true; also hook quit
+      onExit: (code)=> done(code ?? 0),
+      quit: (status, toThrow)=>{ try { done(status ?? 0); } finally { throw toThrow; } },
+      onAbort: (what)=>{ append(outEl, '[abort] ' + what); done(-1); },
+    };
+
+    // Feed stdin via prompt: once full program, then EOF (null)
+    const originalPrompt = window.prompt;
+    let served = false;
+    window.prompt = ()=>{ if (served) return null; served = true; return SMT; };
+
+    
+
+    // Load script with cache-bust
+    await new Promise((res, rej)=>{
+      const s = document.createElement('script');
+      s.src = JS + '?h=' + Date.now();
+      s.async = true; s.onload = res; s.onerror = ()=>rej(new Error('Failed to load cvc5.js'));
+      document.head.appendChild(s);
+    });
+    // Add a timeout to avoid hanging if something goes wrong
+  setTimeout(()=>{ if (!statsEl.textContent) done(-1); }, 10000);
+  }
+
+  btn.addEventListener('click', run);
+})();
+</script>
