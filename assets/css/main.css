@@ -228,6 +228,9 @@ body.theme-matrix .matrix-canvas{ display:block; }
 /* Laser canvas */
 .laser-canvas{ position: fixed; inset: 0; pointer-events: none; display: none; z-index: 0; }
 body.theme-laser .laser-canvas{ display:block; }
+/* Doom overlay canvas */
+.doom-canvas{ position: fixed; inset: 0; pointer-events: none; display: none; z-index: 0; }
+body.theme-doom .doom-canvas{ display:block; }
 
 /* Ensure main content sits above canvases */
 main { position: relative; z-index: 1; }
@@ -256,6 +259,25 @@ body.theme-rog{
   --glow-box: 0 0 12px rgba(255,30,70,0.5);
 }
 body.theme-rog .card, body.theme-rog .button, body.theme-rog .nav-link{ border-radius: 6px; }
+
+/* Doom Cyberpunk (Halloween) theme */
+body.theme-doom{
+  --text:#f7e6e6; --muted:#e2b9b9;
+  --neon-blue:#ff2244; --neon-green:#00ff66; --neon-pink:#a000ff;
+  --border: rgba(255,34,68,0.38);
+  --glow-text: 0 0 12px rgba(255,34,68,0.75), 0 0 28px rgba(255,136,0,0.35);
+  --glow-box: 0 0 12px rgba(255,34,68,0.5), 0 0 26px rgba(255,34,68,0.25);
+  background:
+    radial-gradient(1200px 600px at 12% -10%, rgba(255,34,68,0.10), transparent 45%),
+    radial-gradient(1000px 500px at 100% 100%, rgba(0,255,102,0.08), transparent 45%),
+    radial-gradient(1600px 800px at -20% 120%, rgba(160,0,255,0.06), transparent 50%),
+    var(--bg);
+}
+body.theme-doom .site-title, body.theme-doom h1, body.theme-doom h2, body.theme-doom h3{ letter-spacing: 1.5px; }
+body.theme-doom .nav-link:hover, body.theme-doom .nav-link:focus{
+  color:#1e080a;
+  background: linear-gradient(90deg, rgba(255,34,68,0.35), rgba(255,136,0,0.35));
+}
 
 /* Elegance tweaks for lights-off (old Apple/Amiga inspiration) */
 body.lights-off{ background: linear-gradient(180deg, #0b0c10, #0e0f14); }

@@ -13,8 +13,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- Additional font for DOOM theme headings -->
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/main.css">
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/syntax.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/doom.css">
 </head>
 <body class="crt-bg">
   <div class="scanlines" aria-hidden="true"></div>
@@ -34,7 +37,7 @@
       </nav>
     </div>
   </header>
-  <!-- Always-visible Control Panel -->
+  <!-- Theme Manager restored -->
   <aside class="control-panel" aria-label="Control Panel">
     <div class="cp-header">Theme Manager</div>
     <div class="control-tabs" role="tablist" aria-label="Theme Manager Categories">
@@ -100,6 +103,23 @@
         <label for="cp-rainbow-speed">Rainbow Speed</label>
         <input id="cp-rainbow-speed" type="range" min="0.2" max="3" step="0.1" value="1.0" />
       </div>
+      <div id="cp-section-doom" class="cp-group">
+        <div class="cp-row">
+          <label for="cp-doom-intensity">Doom Intensity</label>
+          <select id="cp-doom-intensity" class="cp-select">
+            <option value="normal">Normal</option>
+            <option value="ultra">Ultra-Violence</option>
+          </select>
+        </div>
+        <div class="cp-row">
+          <label for="cp-doom-volume">Master Volume</label>
+          <input id="cp-doom-volume" type="range" min="0" max="1" step="0.01" value="0.5" />
+        </div>
+        <div class="cp-row">
+          <label for="cp-doom-reduced">Reduced Motion</label>
+          <input id="cp-doom-reduced" type="checkbox" />
+        </div>
+      </div>
     </section>
     <!-- Presets -->
     <section class="cp-section tab-pane is-hidden" data-tab-panel="presets" role="tabpanel" aria-hidden="true">
@@ -110,7 +130,22 @@
       <div class="cp-row"><button id="cp-reset" class="button">Reset</button></div>
     </section>
   </aside>
+  <!-- Content Warning Gate for Doom theme -->
+  <div id="doom-gate" class="doom-gate is-hidden" role="dialog" aria-modal="true" aria-labelledby="doom-gate-title" aria-describedby="doom-gate-desc">
+    <div class="doom-gate__backdrop" aria-hidden="true"></div>
+    <div class="doom-gate__panel">
+      <h2 id="doom-gate-title">Intense Visuals and Audio</h2>
+      <p id="doom-gate-desc">The Doom Classic theme contains heavy motion, flashing lights, disturbing imagery, and low-frequency audio. Choose how you want to proceed.</p>
+      <div class="doom-gate__actions">
+        <button id="doom-gate-ultra" class="button">Enable Ultra-Violence</button>
+        <button id="doom-gate-reduced" class="button">Play with Reduced Effects</button>
+        <button id="doom-gate-dismiss" class="button button-secondary">No thanks</button>
+      </div>
+      <p class="doom-gate__note">Your choice will be remembered. You can tweak intensity later in the Theme Manager.</p>
+    </div>
+  </div>
   <canvas id="matrix-canvas" class="matrix-canvas" aria-hidden="true"></canvas>
+  <canvas id="doom-canvas" class="doom-canvas" aria-hidden="true"></canvas>
   <canvas id="laser-canvas" class="laser-canvas" aria-hidden="true"></canvas>
   <main class="container">
     {{ content }}
@@ -120,6 +155,6 @@
       <p>&copy; {{ site.time | date: "%Y" }} — {{ site.title }}</p>
     </div>
   </footer>
-  <script src="{{ site.baseurl }}/assets/js/main.js"></script>
+  <script src="{{ site.baseurl }}/assets/js/main.js?v={{ site.time | date: '%s' }}"></script>
 </body>
 </html>
