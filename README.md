@@ -4,7 +4,7 @@ This is the source for the GitHub Pages user site at:
 
 https://aureliusvoidcore.github.io
 
-The site is built with Jekyll and follows the theme and structure described in `SPEC.md`.
+The site is built with Jekyll; layouts live under `_layouts/`, pages under `pages/`, and posts under `_posts/`.
 
 ## Local development
 
@@ -35,5 +35,8 @@ bundle exec jekyll serve
 
 Notes
 - This repo is the root/base of the user site, so `baseurl` is empty and `url` is set to https://aureliusvoidcore.github.io in `_config.yml`.
-- See `SPEC.md` for the theme structure and how posts/layouts are organized.
+- Site structure overview:
+	- Layouts: `_layouts/`
+	- Pages: `pages/`
+	- Posts: `_posts/`
 
