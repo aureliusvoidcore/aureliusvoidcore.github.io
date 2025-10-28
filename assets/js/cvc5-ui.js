@@ -11,7 +11,7 @@
     loader: null,
   };
 
-  let ModuleFactory = null; // function to create a Module instance
+  let ModuleFactory = null; // function to create a Module instance or promise-returning thunk
   let busy = false;
 
   function qs(id){ return document.getElementById(id); }
@@ -34,8 +34,34 @@
     // Attempt to load from assets/cvc5/cvc5.js
     const path = (window.__CVC5_JS_PATH__) || (window.__baseurl__ || '') + '/assets/cvc5/cvc5.js';
     try {
+      // Prepare a global Module for non-modularized builds so we can capture IO
+      // We use indirection via globals so per-run we can swap buffers.
+      if (!window.__CVC5_OUT) window.__CVC5_OUT = [];
+      if (!window.__CVC5_ERR) window.__CVC5_ERR = [];
+      if (typeof window.Module === 'undefined') {
+        window.Module = {
+          noInitialRun: true,
+          print: (txt)=> { (window.__CVC5_OUT || []).push(String(txt)); },
+          printErr: (txt)=> { (window.__CVC5_ERR || []).push(String(txt)); },
+          locateFile: (p)=> {
+            if (p.endsWith('.wasm')) return (window.__CVC5_WASM_PATH__) || (window.__baseurl__ || '') + '/assets/cvc5/cvc5.wasm';
+            return p;
+          }
+        };
+      }
       await loadScript(path);
+      // Case 1: MODULARIZE=true -> Module is a factory function
       if (typeof Module === 'function') { ModuleFactory = Module; return ModuleFactory; }
+      // Case 2: Emscripten Promise export (Module is a Promise)
+      if (Module && typeof Module === 'object' && typeof Module.then === 'function') {
+        ModuleFactory = () => Module; // ignore per-call opts; IO is wired via globals above
+        return ModuleFactory;
+      }
+      // Case 3: Global Module object (legacy)
+      if (Module && typeof Module === 'object') {
+        ModuleFactory = () => (Module.ready && typeof Module.ready.then === 'function') ? Module.ready.then(()=>Module) : Promise.resolve(Module);
+        return ModuleFactory;
+      }
     } catch (e){ console.warn(e); }
     throw new Error('cvc5.js not found. Place cvc5.js and cvc5.wasm under assets/cvc5/.');
   }
@@ -78,6 +104,10 @@
     return new Promise((resolve)=>{
       const out = [];
       const err = [];
+      // Point global sinks to our fresh buffers (works for non-modularized builds)
+      window.__CVC5_OUT = out;
+      window.__CVC5_ERR = err;
+      // For modularized builds, we still pass hooks in the opts object
       const instance = factory({
         noInitialRun: true,
         print: (txt)=> out.push(String(txt)),

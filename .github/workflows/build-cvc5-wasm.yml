@@ -20,23 +20,18 @@ jobs:
           sudo apt-get install -y git cmake python3
 
       - name: Setup Emscripten SDK
-        shell: bash
-        run: |
-          git clone https://github.com/emscripten-core/emsdk.git
-          cd emsdk
-          ./emsdk install 3.1.18
-          ./emsdk activate 3.1.18
-          echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
+        uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: 3.1.18
 
       - name: Build cvc5 (WASM)
         shell: bash
         run: |
-          source $GITHUB_ENV
           git clone --depth=1 https://github.com/cvc5/cvc5.git
           cd cvc5
-          ./configure.sh --static --static-binary --auto-download --wasm=JS --wasm-flags='-s MODULARIZE' --name=build-wasm
+          ./configure.sh --static --static-binary --auto-download --no-poly --no-glpk --no-cryptominisat --no-kissat --wasm=JS --wasm-flags='-s MODULARIZE' --name=build-wasm
           cd build-wasm
-          make -j2
+          make -j4
           mkdir -p $GITHUB_WORKSPACE/out
           cp bin/cvc5.js bin/cvc5.wasm $GITHUB_WORKSPACE/out/
 
