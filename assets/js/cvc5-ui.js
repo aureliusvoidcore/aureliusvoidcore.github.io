@@ -67,8 +67,7 @@
 
   function buildArgs(opts){
     const args = [];
-    // quiet by default (suppress banners); allow verbose to opt out
-    if (!opts.verbose) args.push('-q');
+  // Do not use -q: it may hide useful warnings/errors. We filter banners in UI instead.
     // language
     if (opts.lang && opts.lang !== 'auto') args.push('--lang=' + opts.lang);
     // logic
@@ -146,10 +145,10 @@
     function finish(code){
       const dt = (performance.now() - start).toFixed(1);
       let outText = out.join('\n');
-      let errText = err.join('\n');
+      const errText = err.join('\n');
       if (!opts.verbose) {
         outText = stripBanner(outText);
-        errText = stripBanner(errText);
+        // Do NOT strip stderr to ensure all warnings/errors are visible
       }
       if (outText) appendOut(ui.output, outText);
       if (errText) appendOut(ui.output, (outText ? '\n' : '') + '[stderr]\n' + errText);
