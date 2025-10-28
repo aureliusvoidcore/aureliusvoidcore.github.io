@@ -99,48 +99,97 @@
     const start = performance.now();
     clear(ui.output); clear(ui.stats);
     setStatus('Preparing...');
+    // We support two shapes:
+    // 1) Modularized factory (ModuleFactory is a function) -> instantiate with arguments and let it auto-run
+    // 2) Non-modularized Promise Module -> reload the script with fresh Module options and let it auto-run
+
+    const out = [];
+    const err = [];
+    window.__CVC5_OUT = out;
+    window.__CVC5_ERR = err;
+
+    // Prepare stdin fallback via prompt: supply entire input once, then EOF
+    const originalPrompt = window.prompt;
+    let served = false;
+    window.prompt = () => {
+      if (served) return '';
+      served = true;
+      return inputText;
+    };
+
+    const args = buildArgs(opts);
+    // Default to stdin to avoid relying on FS exposure
+    args.push('-');
+
+    function locateFile(p){
+      if (p.endsWith('.wasm')) return (window.__CVC5_WASM_PATH__) || (window.__baseurl__ || '') + '/assets/cvc5/cvc5.wasm';
+      return p;
+    }
+
+    function finish(code){
+      const dt = (performance.now() - start).toFixed(1);
+      appendOut(ui.output, out.join('\n'));
+      if (err.length) appendOut(ui.output, '\n[stderr]\n' + err.join('\n'));
+      ui.stats.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms\nArgs: ' + JSON.stringify(args);
+      // Restore prompt and UI state
+      window.prompt = originalPrompt;
+      setStatus('Ready');
+      busy = false;
+      ui.runBtn.disabled = false;
+      return { code, out, err, dt, args };
+    }
+
     const factory = await ensureCVC5Factory();
+    setStatus('Solving...');
 
-    return new Promise((resolve)=>{
-      const out = [];
-      const err = [];
-      // Point global sinks to our fresh buffers (works for non-modularized builds)
-      window.__CVC5_OUT = out;
-      window.__CVC5_ERR = err;
-      // For modularized builds, we still pass hooks in the opts object
-      const instance = factory({
-        noInitialRun: true,
-        print: (txt)=> out.push(String(txt)),
-        printErr: (txt)=> err.push(String(txt)),
-        locateFile: (p)=> {
-          if (p.endsWith('.wasm')) return (window.__CVC5_WASM_PATH__) || (window.__baseurl__ || '') + '/assets/cvc5/cvc5.wasm';
-          return p;
-        }
-      });
-
-      instance.then((mod)=>{
+    return new Promise((resolve, reject)=>{
+      const baseurl = (window.__baseurl__ || '');
+      const srcBase = (window.__CVC5_JS_PATH__) || (baseurl + '/assets/cvc5/cvc5.js');
+      if (typeof factory === 'function') {
+        // Modularized: create a fresh instance configured to auto-run with our args
         try {
-          // Write input file
-          const fname = '/input.smt2';
-          mod.FS.writeFile(fname, inputText);
-          const args = buildArgs(opts);
-          args.push(fname);
-          setStatus('Solving...');
-          const code = mod.callMain(args);
-          const dt = (performance.now() - start).toFixed(1);
-          appendOut(ui.output, out.join('\n'));
-          if (err.length) appendOut(ui.output, '\n[stderr]\n' + err.join('\n'));
-          ui.stats.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms\nArgs: ' + JSON.stringify(args);
-          resolve({ code, out, err, dt, args });
-        } catch(ex){
-          appendOut(ui.output, 'Exception: ' + ex.message);
-          resolve({ code: -1, out, err: [String(ex)], dt: 0, args: [] });
-        } finally {
-          setStatus('Ready');
-          busy = false;
-          ui.runBtn.disabled = false;
+          factory({
+            noInitialRun: false,
+            noExitRuntime: false,
+            arguments: args,
+            print: (txt)=> out.push(String(txt)),
+            printErr: (txt)=> err.push(String(txt)),
+            locateFile,
+            onExit: (code)=> resolve(finish(code ?? 0)),
+          }).catch((e)=>{
+            appendOut(ui.output, 'Exception: ' + e.message);
+            resolve(finish(-1));
+          });
+        } catch(e){
+          appendOut(ui.output, 'Exception: ' + e.message);
+          resolve(finish(-1));
         }
-      });
+      } else {
+        // Non-modularized: reload the script with fresh Module options and let it auto-run
+        try {
+          window.Module = {
+            noInitialRun: false,
+            noExitRuntime: false,
+            arguments: args,
+            print: (txt)=> out.push(String(txt)),
+            printErr: (txt)=> err.push(String(txt)),
+            locateFile,
+            onExit: (code)=> resolve(finish(code ?? 0)),
+          };
+          // Cache-bust to force reload and new run
+          const s = document.createElement('script');
+          s.src = srcBase + (srcBase.includes('?') ? '&' : '?') + 'run=' + Date.now();
+          s.async = true;
+          s.onerror = ()=>{
+            appendOut(ui.output, 'Failed to load cvc5.js');
+            resolve(finish(-1));
+          };
+          document.head.appendChild(s);
+        } catch(e){
+          appendOut(ui.output, 'Exception: ' + e.message);
+          resolve(finish(-1));
+        }
+      }
     });
   }
 

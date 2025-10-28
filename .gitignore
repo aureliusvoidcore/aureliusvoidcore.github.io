@@ -47,3 +47,9 @@ _site/
 .jekyll-metadata
 vendor/
 .bundle/
+
+# Local cvc5/emsdk build dir
+_cvc5_build/
+
+# Node
+node_modules/
