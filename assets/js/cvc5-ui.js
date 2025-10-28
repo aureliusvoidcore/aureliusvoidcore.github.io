@@ -133,22 +133,28 @@
     function stripBanner(text){
       if (!text) return '';
       const lines = text.split(/\r?\n/);
-      // Common cvc5 banner/warranty lines to filter when not verbose
-      const bannerRe = /^(cvc5|\(c\)|Copyright|This is free software|website|http(s)?:\/\/cvc5\.github\.io|Git version|Configured with|Linked to|Compiled on)/i;
+      // Common cvc5 banner/warranty lines to filter only when not verbose.
+      // We remove only a top block consisting of these lines or blanks.
+      const bannerRe = /^(cvc5\b|\(c\)|Copyright|This is free software|Website|Project|See\s+https?:\/\/cvc5\.|Git version|Configured with|Linked to|Compiled on|Build config|Build date)/i;
       let i = 0;
-      while (i < lines.length && (lines[i].trim() === '' || bannerRe.test(lines[i]))) i++;
-      // Also drop a single trailing blank line after banner, if present
-      if (i < lines.length && lines[i].trim() === '') i++;
+      while (i < lines.length) {
+        const ln = lines[i].trim();
+        if (ln === '' || bannerRe.test(ln)) { i++; continue; }
+        break;
+      }
+      // If we removed banner lines, also drop one extra blank line if present
+      if (i > 0 && i < lines.length && lines[i].trim() === '') i++;
       return lines.slice(i).join('\n');
     }
 
     function finish(code){
       const dt = (performance.now() - start).toFixed(1);
       let outText = out.join('\n');
-      const errText = err.join('\n');
+      let errText = err.join('\n');
       if (!opts.verbose) {
         outText = stripBanner(outText);
-        // Do NOT strip stderr to ensure all warnings/errors are visible
+        // Strip only the initial banner lines from stderr, keep all other errors
+        errText = stripBanner(errText);
       }
       if (outText) appendOut(ui.output, outText);
       if (errText) appendOut(ui.output, (outText ? '\n' : '') + '[stderr]\n' + errText);
