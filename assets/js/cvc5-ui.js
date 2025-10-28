@@ -20,6 +20,16 @@
   function appendOut(el, text){ el.textContent += text + "\n"; }
   function clear(el){ el.textContent = ''; }
 
+  function bytesToString(bytes){
+    if (!bytes || !bytes.length) return '';
+    let s = '';
+    const CHUNK = 8192;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      s += String.fromCharCode.apply(null, bytes.slice(i, i + CHUNK));
+    }
+    return s;
+  }
+
   async function loadScript(src){
     return new Promise((resolve, reject)=>{
       const s = document.createElement('script');
@@ -68,6 +78,7 @@
 
   function buildArgs(opts){
     const args = [];
+    // Do NOT force --interactive=false; it can suppress output in some builds.
   // Do not use -q: it may hide useful warnings/errors. We do not filter banners heuristically.
     // language
     if (opts.lang && opts.lang !== 'auto') args.push('--lang=' + opts.lang);
@@ -89,6 +100,8 @@
     if (opts.tlimit && opts.tlimit > 0) args.push('--tlimit-per=' + parseInt(opts.tlimit,10));
     // random seed
     if (opts.seed) args.push('--seed=' + parseInt(opts.seed,10));
+  // statistics
+  if (opts.stats) args.push('--stats');
     // any extra flags
     if (opts.extra) {
       try {
@@ -108,19 +121,21 @@
     // 1) Modularized factory (ModuleFactory is a function) -> instantiate with arguments and let it auto-run
     // 2) Non-modularized Promise Module -> reload the script with fresh Module options and let it auto-run
 
-    const out = [];
-    const err = [];
+  const out = []; // line-based stdout
+  const err = []; // line-based stderr
+  const outChars = []; // byte-based stdout
+  const errChars = []; // byte-based stderr
     window.__CVC5_OUT = out;
     window.__CVC5_ERR = err;
 
-    // Prepare stdin fallback via prompt: supply entire input once, then EOF
-    const originalPrompt = window.prompt;
-    let served = false;
-    window.prompt = () => {
-      if (served) return null; // signal EOF cleanly
-      served = true;
-      return inputText;
-    };
+    // Feed stdin deterministically via a byte stream instead of prompt
+    const enc = new TextEncoder();
+    const inBytes = enc.encode(inputText.endsWith('\n') ? inputText : (inputText + '\n'));
+    let inIdx = 0;
+    function stdin(){
+      if (inIdx >= inBytes.length) return null;
+      return inBytes[inIdx++];
+    }
 
     const args = buildArgs(opts);
     // Default to stdin to avoid relying on FS exposure
@@ -131,24 +146,60 @@
       return p;
     }
 
-    // Note: no console hijacking and no banner filtering
+  // Note: no console hijacking; we filter banner/prompts locally for Output only
+
+    function stripBanner(text){
+      if (!text) return '';
+      const lines = String(text).split(/\r?\n/);
+      if (!/^cvc5\b/.test(lines[0] || '')) return text; // no banner detected
+      // find end of banner (line ending with 'warranty information.'), then skip following blank lines
+      let end = -1;
+      for (let i=0;i<lines.length;i++){
+        if (/warranty information\.$/i.test(lines[i])) { end = i; break; }
+      }
+      if (end === -1) return text;
+      let j = end + 1;
+      while (j < lines.length && lines[j].trim() === '') j++;
+      return lines.slice(j).join('\n');
+    }
+
+    function stripPrompts(text){
+      if (!text) return '';
+      // Remove repeated 'cvc5>' tokens and standalone prompt lines
+      const lines = String(text).split(/\r?\n/).filter(l => l.trim() !== 'cvc5>');
+      return lines.map(l => l.replace(/^(?:cvc5>\s*)+/, '').replace(/(?:\s+cvc5>\s*)+/g, ' ')).join('\n');
+    }
+
+    function isErrorLine(l){ return /^(\(error\b|Parse Error:|Error:|\[abort\]|fatal|exception)/i.test(l || ''); }
 
     function finish(code){
       const dt = (performance.now() - start).toFixed(1);
-      const outText = out.join('\n');
-      const errText = err.join('\n');
+      const rawOut = (outChars.length ? bytesToString(outChars) : out.join('\n'));
+      const outText = stripPrompts(stripBanner(rawOut));
+      const errRaw = (errChars.length ? bytesToString(errChars) : err.join('\n'));
+      const errText = errRaw;
       if (outText) appendOut(ui.output, outText);
-      if (errText) appendOut(ui.errors || ui.output, errText);
-      ui.stats.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms\nArgs: ' + JSON.stringify(args);
-      // Restore prompt and UI state
-      window.prompt = originalPrompt;
-      setStatus('Ready');
+      // Separate errors and stats (when requested)
+      const errLines = errText ? errText.split(/\r?\n/).filter(isErrorLine) : [];
+      const statLines = (opts && opts.stats && errText) ? errText.split(/\r?\n/).filter(l=> !isErrorLine(l)) : [];
+      // Also catch error lines that might have been printed to stdout (rare but happens)
+      const outErrFromStdout = outText ? outText.split(/\r?\n/).filter(isErrorLine) : [];
+      const allErrLines = errLines.concat(outErrFromStdout);
+      if (allErrLines.length) appendOut(ui.errors || ui.output, allErrLines.join('\n'));
+      if (opts && opts.stats && ui.stats && statLines.length) appendOut(ui.stats, statLines.join('\n'));
+      // Base stats summary (no args here—log them to console)
+      ui.stats.textContent = ['Exit code: ' + code, 'Time: ' + dt + ' ms'].join('\n');
+      try { console.info('[cvc5 args]', args); } catch {}
+      // Highlight error state if non-zero or explicit error lines
+      if (code !== 0 || allErrLines.length) setStatus('Error'); else setStatus('Ready');
+      // Ensure latest errors are visible
+      try { if (ui.errors) ui.errors.scrollTop = ui.errors.scrollHeight; } catch {}
       busy = false;
       ui.runBtn.disabled = false;
       return { code, out, err, dt, args };
     }
 
-    const factory = await ensureCVC5Factory();
+  const factory = await ensureCVC5Factory();
     setStatus('Solving...');
 
     return new Promise((resolve, reject)=>{
@@ -169,6 +220,9 @@
             arguments: args,
             print: (txt)=> out.push(String(txt)),
             printErr: (txt)=> err.push(String(txt)),
+            stdin,
+            stdout: (ch)=> outChars.push(ch & 0xff),
+            stderr: (ch)=> errChars.push(ch & 0xff),
             locateFile,
             // onExit may not fire if glue forces noExitRuntime=true; also hook quit
             onExit: (code)=> done(code),
@@ -186,6 +240,9 @@
             arguments: args,
             print: (txt)=> out.push(String(txt)),
             printErr: (txt)=> err.push(String(txt)),
+            stdin,
+            stdout: (ch)=> outChars.push(ch & 0xff),
+            stderr: (ch)=> errChars.push(ch & 0xff),
             locateFile,
             // onExit may not fire if glue forces noExitRuntime=true; also hook quit
             onExit: (code)=> done(code),
@@ -200,13 +257,18 @@
           document.head.appendChild(s);
         } catch(e){ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); }
       }
-      // Failsafe timeout in case something goes wrong
-      setTimeout(()=>{
-        if (ui.status && ui.status.textContent && ui.status.textContent.includes('Solving')) {
-          appendOut(ui.output, '[timeout] Solver did not finish within 10s');
-          done(-1);
-        }
-      }, 10000);
+      // Failsafe timeout based on UI timeout setting (0 disables failsafe)
+      const tEl = qs('cvc5-timeout');
+      const tVal = (tEl && parseInt(tEl.value, 10)) || 0;
+      if (tVal > 0) {
+        setTimeout(()=>{
+          if (ui.status && ui.status.textContent && ui.status.textContent.includes('Solving')) {
+            const partialErr = (errChars.length ? bytesToString(errChars) : err.join('\n'));
+            appendOut(ui.errors || ui.output, `[timeout] Solver did not finish within ${tVal}ms` + (partialErr? ('\n' + partialErr) : ''));
+            done(-1);
+          }
+        }, tVal);
+      }
     });
   }
 
@@ -223,6 +285,7 @@
       bvSat: qs('cvc5-bv-sat').value,
       verbose: qs('cvc5-verbose').checked,
       sygusEnum: (qs('cvc5-sygus-enum') && qs('cvc5-sygus-enum').checked) || false,
+      stats: (function(){ const x = document.getElementById('cvc5-stats-flag'); return !!(x && x.checked); })(),
       extra: qs('cvc5-extra').value.trim(),
     };
   }
