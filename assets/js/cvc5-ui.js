@@ -51,16 +51,15 @@
       }
       await loadScript(path);
       // Case 1: MODULARIZE=true -> Module is a factory function
-      if (typeof Module === 'function') { ModuleFactory = Module; return ModuleFactory; }
+      if (typeof Module === 'function') { ModuleFactory = Module; ModuleFactory.__kind='factory'; return ModuleFactory; }
       // Case 2: Emscripten Promise export (Module is a Promise)
       if (Module && typeof Module === 'object' && typeof Module.then === 'function') {
-        ModuleFactory = () => Module; // ignore per-call opts; IO is wired via globals above
-        return ModuleFactory;
+        const f = () => Module; f.__kind = 'promise'; ModuleFactory = f; return ModuleFactory;
       }
       // Case 3: Global Module object (legacy)
       if (Module && typeof Module === 'object') {
-        ModuleFactory = () => (Module.ready && typeof Module.ready.then === 'function') ? Module.ready.then(()=>Module) : Promise.resolve(Module);
-        return ModuleFactory;
+        const f = () => (Module.ready && typeof Module.ready.then === 'function') ? Module.ready.then(()=>Module) : Promise.resolve(Module);
+        f.__kind = 'object'; ModuleFactory = f; return ModuleFactory;
       }
     } catch (e){ console.warn(e); }
     throw new Error('cvc5.js not found. Place cvc5.js and cvc5.wasm under assets/cvc5/.');
@@ -68,22 +67,28 @@
 
   function buildArgs(opts){
     const args = [];
+    // quiet by default (suppress banners); allow verbose to opt out
+    if (!opts.verbose) args.push('-q');
     // language
     if (opts.lang && opts.lang !== 'auto') args.push('--lang=' + opts.lang);
     // logic
-    if (opts.logic) args.push('--lang-exp', '--parse-only=false', '--logic=' + opts.logic);
-    // produce models / unsats
-    if (opts.models) args.push('--produce-models');
-    if (opts.unsat) args.push('--produce-unsat-cores');
-    // incremental
-    if (opts.incr) args.push('--incremental');
+    if (opts.logic) args.push('--logic=' + opts.logic);
+    const isSyGuS = (opts.lang === 'sygus2');
+    // SMT-only options
+    if (!isSyGuS) {
+      if (opts.models) args.push('--produce-models');
+      if (opts.unsat) args.push('--produce-unsat-cores');
+      if (opts.incr) args.push('--incremental');
+      if (opts.bvSat) args.push('--bv-sat-solver=' + opts.bvSat);
+      if (opts.strExp) args.push('--strings-exp');
+    } else {
+      // SyGuS specific
+      if (opts.sygusEnum) args.push('--sygus-enum');
+    }
     // time limit per query (ms)
     if (opts.tlimit && opts.tlimit > 0) args.push('--tlimit-per=' + parseInt(opts.tlimit,10));
     // random seed
     if (opts.seed) args.push('--seed=' + parseInt(opts.seed,10));
-    // strings and bit-vectors expert flags
-    if (opts.strExp) args.push('--strings-exp');
-    if (opts.bvSat) args.push('--bv-sat-solver=' + opts.bvSat);
     // any extra flags
     if (opts.extra) {
       try {
@@ -112,7 +117,7 @@
     const originalPrompt = window.prompt;
     let served = false;
     window.prompt = () => {
-      if (served) return '';
+      if (served) return null; // signal EOF cleanly
       served = true;
       return inputText;
     };
@@ -145,8 +150,14 @@
     return new Promise((resolve, reject)=>{
       const baseurl = (window.__baseurl__ || '');
       const srcBase = (window.__CVC5_JS_PATH__) || (baseurl + '/assets/cvc5/cvc5.js');
-      if (typeof factory === 'function') {
-        // Modularized: create a fresh instance configured to auto-run with our args
+      let resolved = false;
+      const done = (code)=>{
+        if (resolved) return;
+        resolved = true;
+        resolve(finish(code ?? 0));
+      };
+      if (factory && factory.__kind === 'factory') {
+        // Modularized: instantiate and let it auto-run with args; capture exit code
         try {
           factory({
             noInitialRun: false,
@@ -155,17 +166,14 @@
             print: (txt)=> out.push(String(txt)),
             printErr: (txt)=> err.push(String(txt)),
             locateFile,
-            onExit: (code)=> resolve(finish(code ?? 0)),
-          }).catch((e)=>{
-            appendOut(ui.output, 'Exception: ' + e.message);
-            resolve(finish(-1));
-          });
-        } catch(e){
-          appendOut(ui.output, 'Exception: ' + e.message);
-          resolve(finish(-1));
-        }
+            // onExit may not fire if glue forces noExitRuntime=true; also hook quit
+            onExit: (code)=> done(code),
+            quit: (status, toThrow)=>{ try { done(status ?? 0); } finally { throw toThrow; } },
+            onAbort: (what)=>{ appendOut(ui.output, '[abort] ' + what); done(-1); },
+          }).catch((e)=>{ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); });
+        } catch(e){ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); }
       } else {
-        // Non-modularized: reload the script with fresh Module options and let it auto-run
+        // Non-modularized: predefine Module and reload script to auto-run; capture exit code
         try {
           window.Module = {
             noInitialRun: false,
@@ -174,22 +182,25 @@
             print: (txt)=> out.push(String(txt)),
             printErr: (txt)=> err.push(String(txt)),
             locateFile,
-            onExit: (code)=> resolve(finish(code ?? 0)),
+            // onExit may not fire if glue forces noExitRuntime=true; also hook quit
+            onExit: (code)=> done(code),
+            quit: (status, toThrow)=>{ try { done(status ?? 0); } finally { throw toThrow; } },
+            onAbort: (what)=>{ appendOut(ui.output, '[abort] ' + what); done(-1); },
           };
-          // Cache-bust to force reload and new run
           const s = document.createElement('script');
           s.src = srcBase + (srcBase.includes('?') ? '&' : '?') + 'run=' + Date.now();
           s.async = true;
-          s.onerror = ()=>{
-            appendOut(ui.output, 'Failed to load cvc5.js');
-            resolve(finish(-1));
-          };
+          s.onerror = ()=>{ appendOut(ui.output, 'Failed to load cvc5.js'); done(-1); };
           document.head.appendChild(s);
-        } catch(e){
-          appendOut(ui.output, 'Exception: ' + e.message);
-          resolve(finish(-1));
-        }
+        } catch(e){ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); }
       }
+      // Failsafe timeout in case something goes wrong
+      setTimeout(()=>{
+        if (ui.status && ui.status.textContent && ui.status.textContent.includes('Solving')) {
+          appendOut(ui.output, '[timeout] Solver did not finish within 10s');
+          done(-1);
+        }
+      }, 10000);
     });
   }
 
@@ -204,6 +215,8 @@
       seed: parseInt(qs('cvc5-seed').value, 10) || 0,
       strExp: qs('cvc5-strings-exp').checked,
       bvSat: qs('cvc5-bv-sat').value,
+      verbose: qs('cvc5-verbose').checked,
+      sygusEnum: (qs('cvc5-sygus-enum') && qs('cvc5-sygus-enum').checked) || false,
       extra: qs('cvc5-extra').value.trim(),
     };
   }
@@ -235,6 +248,17 @@
     ui.stopBtn = qs('cvc5-stop');
     ui.loadBtn = qs('cvc5-load');
     ui.status = qs('cvc5-status');
+    function refreshVisibility(){
+      const lang = qs('cvc5-lang').value;
+      const isSyGuS = (lang === 'sygus2');
+      document.querySelectorAll('.only-smt').forEach(el=>{ el.style.display = isSyGuS ? 'none' : ''; });
+      document.querySelectorAll('.only-sygus').forEach(el=>{ el.style.display = isSyGuS ? '' : 'none'; });
+    }
+
+    // toggle option visibility based on language
+    qs('cvc5-lang').addEventListener('change', refreshVisibility);
+    refreshVisibility();
+
 
     // baseurl from Jekyll
     try { window.__baseurl__ = document.querySelector('link[rel="icon"]').href.replace(/\/assets.*$/, ''); } catch {}

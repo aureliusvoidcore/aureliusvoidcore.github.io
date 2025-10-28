@@ -43,19 +43,25 @@ permalink: /pages/formal-verification/cvc5
       <div class="cvc5-row"><label for="cvc5-timeout">Timeout (ms)</label><input id="cvc5-timeout" type="number" min="0" step="100" value="0" /></div>
       <div class="cvc5-row"><label for="cvc5-seed">Random Seed</label><input id="cvc5-seed" type="number" min="0" step="1" value="0" /></div>
       <div class="cvc5-row"><label for="cvc5-bv-sat">BV SAT Solver</label>
-        <select id="cvc5-bv-sat" class="cp-select">
+        <select id="cvc5-bv-sat" class="cp-select only-smt">
           <option value="">Default</option>
           <option value="cadical">CaDiCaL</option>
           <option value="cryptominisat">CryptoMiniSat</option>
         </select>
       </div>
-      <div class="cvc5-row"><label></label>
+      <div class="cvc5-row only-smt"><label></label>
         <label><input id="cvc5-models" type="checkbox" /> Produce Models</label>
         <label><input id="cvc5-unsat" type="checkbox" /> Unsat Cores</label>
       </div>
-      <div class="cvc5-row"><label></label>
+      <div class="cvc5-row only-smt"><label></label>
         <label><input id="cvc5-incremental" type="checkbox" /> Incremental</label>
         <label><input id="cvc5-strings-exp" type="checkbox" /> Strings Experimental</label>
+      </div>
+      <div class="cvc5-row"><label></label>
+        <label><input id="cvc5-verbose" type="checkbox" /> Verbose (show banner/logs)</label>
+      </div>
+      <div class="cvc5-row only-sygus"><label>SyGuS</label>
+        <label><input id="cvc5-sygus-enum" type="checkbox" /> Use enumerative solver</label>
       </div>
       <div class="cvc5-row"><label for="cvc5-extra">Extra Flags</label><input id="cvc5-extra" type="text" placeholder="Any additional CLI flags..." /></div>
     </div>
