@@ -2,6 +2,7 @@
   const ui = {
     input: null,
     output: null,
+    errors: null,
     stats: null,
     runBtn: null,
     stopBtn: null,
@@ -67,7 +68,7 @@
 
   function buildArgs(opts){
     const args = [];
-  // Do not use -q: it may hide useful warnings/errors. We filter banners in UI instead.
+  // Do not use -q: it may hide useful warnings/errors. We do not filter banners heuristically.
     // language
     if (opts.lang && opts.lang !== 'auto') args.push('--lang=' + opts.lang);
     // logic
@@ -130,46 +131,14 @@
       return p;
     }
 
-    // Capture browser console during run to surface unexpected errors
-    const origConsole = { log: console.log, warn: console.warn, error: console.error };
-    const consoleBuf = { log: [], warn: [], error: [] };
-    console.log = (...a)=>{ try { consoleBuf.log.push(a.map(String).join(' ')); } catch{} finally { origConsole.log.apply(console, a); } };
-    console.warn = (...a)=>{ try { consoleBuf.warn.push(a.map(String).join(' ')); } catch{} finally { origConsole.warn.apply(console, a); } };
-    console.error = (...a)=>{ try { consoleBuf.error.push(a.map(String).join(' ')); } catch{} finally { origConsole.error.apply(console, a); } };
-
-    function stripBanner(text){
-      if (!text) return '';
-      const lines = text.split(/\r?\n/);
-      // Common cvc5 banner/warranty lines to filter only when not verbose.
-      // We remove only a top block consisting of these lines or blanks.
-      const bannerRe = /^(cvc5\b|\(c\)|Copyright|This is free software|Website|Project|See\s+https?:\/\/cvc5\.|Git version|Configured with|Linked to|Compiled on|Build config|Build date)/i;
-      let i = 0;
-      while (i < lines.length) {
-        const ln = lines[i].trim();
-        if (ln === '' || bannerRe.test(ln)) { i++; continue; }
-        break;
-      }
-      // If we removed banner lines, also drop one extra blank line if present
-      if (i > 0 && i < lines.length && lines[i].trim() === '') i++;
-      return lines.slice(i).join('\n');
-    }
+    // Note: no console hijacking and no banner filtering
 
     function finish(code){
       const dt = (performance.now() - start).toFixed(1);
-      let outText = out.join('\n');
-      let errText = err.join('\n');
-      if (!opts.verbose) {
-        outText = stripBanner(outText);
-        // Strip only the initial banner lines from stderr, keep all other errors
-        errText = stripBanner(errText);
-      }
-      // Restore console
-      console.log = origConsole.log; console.warn = origConsole.warn; console.error = origConsole.error;
-
+      const outText = out.join('\n');
+      const errText = err.join('\n');
       if (outText) appendOut(ui.output, outText);
-      if (errText) appendOut(ui.output, (outText ? '\n' : '') + '[stderr]\n' + errText);
-      if (consoleBuf.error.length) appendOut(ui.output, (outText || errText ? '\n' : '') + '[console.error]\n' + consoleBuf.error.join('\n'));
-      if (consoleBuf.warn.length) appendOut(ui.output, (outText || errText || consoleBuf.error.length ? '\n' : '') + '[console.warn]\n' + consoleBuf.warn.join('\n'));
+      if (errText) appendOut(ui.errors || ui.output, errText);
       ui.stats.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms\nArgs: ' + JSON.stringify(args);
       // Restore prompt and UI state
       window.prompt = originalPrompt;
@@ -243,7 +212,7 @@
 
   function getOptions(){
     return {
-      lang: qs('cvc5-lang').value, // auto|smt2|sygus2
+      lang: qs('cvc5-lang').value, // auto|smtlib2.6|sygus2
       logic: qs('cvc5-logic').value.trim(),
       models: qs('cvc5-models').checked,
       unsat: qs('cvc5-unsat').checked,
@@ -280,6 +249,7 @@
   function wire(){
     ui.input = qs('cvc5-input');
     ui.output = qs('cvc5-output');
+    ui.errors = qs('cvc5-errors');
     ui.stats = qs('cvc5-stats');
     ui.runBtn = qs('cvc5-run');
     ui.stopBtn = qs('cvc5-stop');
@@ -322,7 +292,7 @@
       const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cvc5-output.txt'; a.click();
     });
     // clear
-    qs('cvc5-clear').addEventListener('click', ()=>{ ui.input.value=''; clear(ui.output); clear(ui.stats); });
+  qs('cvc5-clear').addEventListener('click', ()=>{ ui.input.value=''; clear(ui.output); if (ui.errors) clear(ui.errors); clear(ui.stats); });
 
     setStatus('Ready');
   }
