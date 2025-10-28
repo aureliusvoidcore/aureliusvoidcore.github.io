@@ -1,0 +1,8 @@
+(set-logic LIA)
+(synth-fun f ((x Int) (y Int)) Int
+  ((Start Int (x y 0 1 (+ Start Start) (- Start) (ite StartBool Start Start)))
+   (StartBool Bool ((<= Start Start) (= Start Start)))) )
+(constraint (= (f 0 0) 0))
+(constraint (= (f 1 0) 1))
+(constraint (= (f 0 1) 1))
+(check-synth)

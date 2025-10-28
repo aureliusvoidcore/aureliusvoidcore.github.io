@@ -1,0 +1,263 @@
+/* Doom Classic overrides for existing theme-doom. All rules are scoped to body.theme-doom
+  so other themes remain intact. */
+
+body.theme-doom {
+  --doom-bg-dark: #231b14;
+  --doom-bg: #2f251d;
+  --doom-deep: #17110c;
+  --doom-red: #b50000;
+  --doom-red-bright: #e01414;
+  --doom-gold: #d7a000;
+  --doom-gold-bright: #ffcc33;
+  --doom-iron: #4a3f35;
+  --doom-iron-hi: #5a4f45;
+  --doom-iron-lo: #2a241d;
+  --text: #e8e0db;
+  --muted: #b99c8c;
+  --link: #ff3c2e;
+  --code-bg: #1f1812;
+  --border: rgba(255, 204, 51, 0.28);
+
+  margin: 0;
+  color: var(--text);
+  /* Classic DOOM concrete/stone texture effect with brown-gray palette */
+  background:
+    /* Noise-like gradient overlay for texture */
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px),
+    /* Horizontal bands for concrete block effect */
+    repeating-linear-gradient(180deg, 
+      #2f251d 0px, #2f251d 80px,
+      #241b13 80px, #241b13 82px,
+      #3a2d22 82px, #3a2d22 162px,
+      #241b13 162px, #241b13 164px
+    ),
+    /* Subtle dark vignette */
+    radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%),
+    /* Base color - classic Doom brown-gray */
+    linear-gradient(180deg, #2f251d 0%, #241b13 100%);
+  font-family: 'Teko', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  line-height: 1.55;
+}
+
+/* Disable cyberpunk-specific overlays/effects in Doom theme */
+body.theme-doom .scanlines { display: none !important; }
+body.theme-doom .glitch::before,
+body.theme-doom .glitch::after { content: none !important; display: none !important; }
+body.theme-doom .blinking-cursor { display: none !important; }
+
+/* Container framed like a metal panel */
+body.theme-doom .container {
+  max-width: 1100px;
+  padding: 24px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Header: DOOM-style title (gold fill with red stroke and shadow) */
+body.theme-doom .site-header {
+  text-align: center;
+  padding: 28px 0 8px;
+}
+
+body.theme-doom .site-title {
+  margin: 0;
+  font-size: clamp(46px, 9vw, 128px);
+  letter-spacing: 1px;
+  line-height: 0.85;
+  text-transform: uppercase;
+  color: var(--doom-gold-bright);
+  /* Gold gradient fill */
+  background: linear-gradient(180deg, #ffe08a, #ffcc33 45%, #c88a13 55%, #8a5a0a 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Red stroke and drop shadow to mimic menu lettering */
+  text-shadow:
+    0 1px 0 #8a2406,
+    0 2px 0 #7a1e05,
+    0 3px 0 #6a1b05,
+    0 0 10px rgba(255, 40, 0, 0.35),
+    0 0 36px rgba(255, 0, 0, 0.24);
+}
+
+body.theme-doom .site-tag {
+  margin: 4px 0 10px;
+  font-family: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* Nav bar styled like the DOOM menu */
+body.theme-doom .nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding: 10px 0 14px;
+}
+
+body.theme-doom .nav-link {
+  position: relative;
+  display: inline-block;
+  padding: 8px 16px 6px;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: clamp(16px, 2.6vw, 28px);
+  color: #ffd77a;
+  text-transform: uppercase;
+  /* Red outer stroke via layered shadows */
+  text-shadow:
+    0 1px 0 #8a2406,
+    0 2px 0 #7a1e05,
+    0 0 14px rgba(255, 30, 0, 0.28);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+body.theme-doom .nav-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(120, 0, 0, 0.35);
+  border-radius: 6px;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 120, 0.3),
+    inset 0 -2px 0 rgba(100, 40, 0, 0.6),
+    0 2px 0 rgba(0,0,0,0.35);
+}
+
+body.theme-doom .nav-link:hover,
+body.theme-doom .nav-link:focus {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.08) saturate(1.05);
+  color: #fff2c0;
+}
+
+/* Content basics */
+body.theme-doom h1,
+body.theme-doom h2,
+body.theme-doom h3 {
+  margin: 22px 0 10px;
+  text-transform: uppercase;
+  color: var(--doom-gold-bright);
+  text-shadow: 0 2px 0 #6a1b05, 0 0 16px rgba(255, 90, 0, 0.22);
+}
+
+body.theme-doom p,
+body.theme-doom li,
+body.theme-doom article { font-family: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+
+body.theme-doom a { color: var(--link); }
+body.theme-doom a:hover { color: var(--doom-red-bright); }
+
+/* Metal panel card style for article blocks */
+body.theme-doom article,
+body.theme-doom .card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.18)),
+    linear-gradient(180deg, var(--doom-iron-hi), var(--doom-iron));
+  border-radius: 10px;
+  border: 1px solid rgba(255, 200, 80, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 160, 0.15),
+    inset 0 -2px 0 rgba(0,0,0,0.4),
+    0 10px 28px rgba(0,0,0,0.45);
+  padding: 18px;
+}
+
+body.theme-doom .meta { color: var(--muted); font-style: italic; }
+
+/* Code blocks */
+body.theme-doom pre.highlight,
+body.theme-doom pre code {
+  background: var(--code-bg);
+  border: 1px solid rgba(255, 140, 0, 0.25);
+  border-radius: 8px;
+  padding: 12px;
+  overflow: auto;
+  color: #ffcf9a;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4), 0 0 18px rgba(255, 40, 0, 0.08);
+}
+
+body.theme-doom code { color: #ff9f6b; }
+
+/* Footer */
+body.theme-doom .site-footer {
+  text-align: center;
+  padding: 20px 0 30px;
+  color: var(--muted);
+}
+
+/* Decorative: faint panel seams and rivets behind content */
+body.theme-doom::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    /* vertical seams */
+    linear-gradient(90deg, rgba(255,190,100,0.08) 0, rgba(255,190,100,0.08) 1px, transparent 1px) calc(50% - 300px)/300px 100%,
+    linear-gradient(90deg, rgba(255,190,100,0.06) 0, rgba(255,190,100,0.06) 1px, transparent 1px) calc(50% + 300px)/300px 100%,
+    /* horizontal seam */
+    linear-gradient(0deg, rgba(255,190,100,0.06) 0, rgba(255,190,100,0.06) 1px, transparent 1px) center/100% 240px;
+  opacity: 0.18;
+}
+
+/* Blood vignette overlay with slow pulse */
+body.theme-doom::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 60%, rgba(120,0,0,0) 40%, rgba(80,0,0,0.5) 100%);
+  mix-blend-mode: multiply;
+  animation: doom-pulse 5s ease-in-out infinite;
+}
+
+@keyframes doom-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+/* Micro-shake applied from JS during lunges */
+body.theme-doom.doom-shake { will-change: transform; }
+body.theme-doom.doom-shake { transform: translate(var(--shake-x, 0), var(--shake-y, 0)); }
+
+/* Buttons utility to match theme */
+body.theme-doom .button {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #ffe7b0;
+  background: linear-gradient(180deg, #5a0d0d, #3a0707);
+  border: 1px solid rgba(255, 90, 0, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.12), 0 8px 22px rgba(0,0,0,0.45);
+}
+body.theme-doom .button:hover { filter: brightness(1.08) saturate(1.06); }
+
+/* Tables */
+body.theme-doom table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; }
+body.theme-doom th, body.theme-doom td { border: 1px solid rgba(255, 200, 80, 0.18); padding: 8px 10px; }
+body.theme-doom thead th { background: #3a0f0f; color: #ffe7b0; }
+
+/* Images */
+body.theme-doom img { max-width: 100%; border-radius: 6px; box-shadow: 0 10px 24px rgba(0,0,0,0.45); }
+
+/* Doom Gate (content warning) */
+.doom-gate { position: fixed; inset: 0; z-index: 9999; display: none; }
+.doom-gate:not(.is-hidden) { display: block; }
+.doom-gate__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(2px); }
+.doom-gate__panel {
+  position: relative; max-width: 640px; margin: 10vh auto; padding: 24px; border: 1px solid rgba(255,0,0,0.25);
+  background: linear-gradient(180deg, rgba(40,5,5,0.95), rgba(15,2,2,0.96));
+  color: #f9d7d7; box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 60px rgba(180,0,0,0.2);
+}
+.doom-gate__actions { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+.doom-gate .button { background: #5a0b0b; border: 1px solid #c00; color:#fff; padding: 10px 14px; cursor: pointer; }
+.doom-gate .button:hover { background: #7a0f0f; }
+.doom-gate .button-secondary { background: #333; border-color: #666; }
+.doom-gate__note { font-size: 0.9rem; color: #f1c7c7; opacity: 0.8; }
