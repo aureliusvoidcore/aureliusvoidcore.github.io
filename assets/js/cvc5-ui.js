@@ -12,7 +12,7 @@
     loader: null,
   };
 
-  let ModuleFactory = null; // function to create a Module instance or promise-returning thunk
+  let ModuleFactory = null;
   let busy = false;
 
   function qs(id){ return document.getElementById(id); }
@@ -42,11 +42,8 @@
 
   async function ensureCVC5Factory(){
     if (ModuleFactory) return ModuleFactory;
-    // Attempt to load from assets/cvc5/cvc5.js
     const path = (window.__CVC5_JS_PATH__) || (window.__baseurl__ || '') + '/assets/cvc5/cvc5.js';
     try {
-      // Prepare a global Module for non-modularized builds so we can capture IO
-      // We use indirection via globals so per-run we can swap buffers.
       if (!window.__CVC5_OUT) window.__CVC5_OUT = [];
       if (!window.__CVC5_ERR) window.__CVC5_ERR = [];
       if (typeof window.Module === 'undefined') {
@@ -61,13 +58,13 @@
         };
       }
       await loadScript(path);
-      // Case 1: MODULARIZE=true -> Module is a factory function
+      // MODULARIZE=true -> factory function
       if (typeof Module === 'function') { ModuleFactory = Module; ModuleFactory.__kind='factory'; return ModuleFactory; }
-      // Case 2: Emscripten Promise export (Module is a Promise)
+      // Emscripten Promise export
       if (Module && typeof Module === 'object' && typeof Module.then === 'function') {
         const f = () => Module; f.__kind = 'promise'; ModuleFactory = f; return ModuleFactory;
       }
-      // Case 3: Global Module object (legacy)
+      // Global Module object (legacy)
       if (Module && typeof Module === 'object') {
         const f = () => (Module.ready && typeof Module.ready.then === 'function') ? Module.ready.then(()=>Module) : Promise.resolve(Module);
         f.__kind = 'object'; ModuleFactory = f; return ModuleFactory;
@@ -78,14 +75,10 @@
 
   function buildArgs(opts){
     const args = [];
-    // Do NOT force --interactive=false; it can suppress output in some builds.
-  // Do not use -q: it may hide useful warnings/errors. We do not filter banners heuristically.
-    // language
+    // Do NOT force --interactive=false; some builds suppress output.
     if (opts.lang && opts.lang !== 'auto') args.push('--lang=' + opts.lang);
-    // logic
     if (opts.logic) args.push('--logic=' + opts.logic);
     const isSyGuS = (opts.lang === 'sygus2');
-    // SMT-only options
     if (!isSyGuS) {
       if (opts.models) args.push('--produce-models');
       if (opts.unsat) args.push('--produce-unsat-cores');
@@ -93,23 +86,17 @@
       if (opts.bvSat) args.push('--bv-sat-solver=' + opts.bvSat);
       if (opts.strExp) args.push('--strings-exp');
     } else {
-      // SyGuS specific
       if (opts.sygusEnum) args.push('--sygus-enum');
     }
-    // time limit per query (ms)
     if (opts.tlimit && opts.tlimit > 0) args.push('--tlimit-per=' + parseInt(opts.tlimit,10));
-    // random seed
     if (opts.seed) args.push('--seed=' + parseInt(opts.seed,10));
-  // statistics
   if (opts.stats) args.push('--stats');
-    // any extra flags
     if (opts.extra) {
       try {
         const extra = opts.extra.split(/\s+/).filter(Boolean);
         args.push(...extra);
       } catch {}
     }
-    // input file path will be appended by the caller
     return args;
   }
 
@@ -117,18 +104,16 @@
     const start = performance.now();
     clear(ui.output); clear(ui.stats);
     setStatus('Preparing...');
-    // We support two shapes:
-    // 1) Modularized factory (ModuleFactory is a function) -> instantiate with arguments and let it auto-run
-    // 2) Non-modularized Promise Module -> reload the script with fresh Module options and let it auto-run
+  // Supports modularized factory and legacy global Module
 
-  const out = []; // line-based stdout
-  const err = []; // line-based stderr
-  const outChars = []; // byte-based stdout
-  const errChars = []; // byte-based stderr
+  const out = [];
+  const err = [];
+  const outChars = [];
+  const errChars = [];
     window.__CVC5_OUT = out;
     window.__CVC5_ERR = err;
 
-    // Feed stdin deterministically via a byte stream instead of prompt
+  // Feed stdin as a byte stream
     const enc = new TextEncoder();
     const inBytes = enc.encode(inputText.endsWith('\n') ? inputText : (inputText + '\n'));
     let inIdx = 0;
@@ -138,7 +123,6 @@
     }
 
     const args = buildArgs(opts);
-    // Default to stdin to avoid relying on FS exposure
     args.push('-');
 
     function locateFile(p){
@@ -146,7 +130,7 @@
       return p;
     }
 
-  // Note: no console hijacking; we filter banner/prompts locally for Output only
+  // Filter banner/prompts locally for Output only
 
     function stripBanner(text){
       if (!text) return '';
@@ -179,20 +163,15 @@
       const errRaw = (errChars.length ? bytesToString(errChars) : err.join('\n'));
       const errText = errRaw;
       if (outText) appendOut(ui.output, outText);
-      // Separate errors and stats (when requested)
       const errLines = errText ? errText.split(/\r?\n/).filter(isErrorLine) : [];
       const statLines = (opts && opts.stats && errText) ? errText.split(/\r?\n/).filter(l=> !isErrorLine(l)) : [];
-      // Also catch error lines that might have been printed to stdout (rare but happens)
       const outErrFromStdout = outText ? outText.split(/\r?\n/).filter(isErrorLine) : [];
       const allErrLines = errLines.concat(outErrFromStdout);
       if (allErrLines.length) appendOut(ui.errors || ui.output, allErrLines.join('\n'));
       if (opts && opts.stats && ui.stats && statLines.length) appendOut(ui.stats, statLines.join('\n'));
-      // Base stats summary (no args here—log them to console)
       ui.stats.textContent = ['Exit code: ' + code, 'Time: ' + dt + ' ms'].join('\n');
       try { console.info('[cvc5 args]', args); } catch {}
-      // Highlight error state if non-zero or explicit error lines
       if (code !== 0 || allErrLines.length) setStatus('Error'); else setStatus('Ready');
-      // Ensure latest errors are visible
       try { if (ui.errors) ui.errors.scrollTop = ui.errors.scrollHeight; } catch {}
       busy = false;
       ui.runBtn.disabled = false;
@@ -212,7 +191,6 @@
         resolve(finish(code ?? 0));
       };
       if (factory && factory.__kind === 'factory') {
-        // Modularized: instantiate and let it auto-run with args; capture exit code
         try {
           factory({
             noInitialRun: false,
@@ -224,15 +202,12 @@
             stdout: (ch)=> outChars.push(ch & 0xff),
             stderr: (ch)=> errChars.push(ch & 0xff),
             locateFile,
-            // onExit may not fire if glue forces noExitRuntime=true; also hook quit
             onExit: (code)=> done(code),
-            // swallow internal throw; we capture status and outputs above
             quit: (status /*, toThrow*/)=>{ done(status ?? 0); },
             onAbort: (what)=>{ appendOut(ui.output, '[abort] ' + what); done(-1); },
           }).catch((e)=>{ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); });
         } catch(e){ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); }
       } else {
-        // Non-modularized: predefine Module and reload script to auto-run; capture exit code
         try {
           window.Module = {
             noInitialRun: false,
@@ -244,9 +219,7 @@
             stdout: (ch)=> outChars.push(ch & 0xff),
             stderr: (ch)=> errChars.push(ch & 0xff),
             locateFile,
-            // onExit may not fire if glue forces noExitRuntime=true; also hook quit
             onExit: (code)=> done(code),
-            // swallow internal throw; we capture status and outputs above
             quit: (status /*, toThrow*/)=>{ done(status ?? 0); },
             onAbort: (what)=>{ appendOut(ui.output, '[abort] ' + what); done(-1); },
           };
@@ -257,7 +230,6 @@
           document.head.appendChild(s);
         } catch(e){ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); }
       }
-      // Failsafe timeout based on UI timeout setting (0 disables failsafe)
       const tEl = qs('cvc5-timeout');
       const tVal = (tEl && parseInt(tEl.value, 10)) || 0;
       if (tVal > 0) {
@@ -325,12 +297,10 @@
       document.querySelectorAll('.only-sygus').forEach(el=>{ el.style.display = isSyGuS ? '' : 'none'; });
     }
 
-    // toggle option visibility based on language
     qs('cvc5-lang').addEventListener('change', refreshVisibility);
     refreshVisibility();
 
 
-    // baseurl from Jekyll
     try { window.__baseurl__ = document.querySelector('link[rel="icon"]').href.replace(/\/assets.*$/, ''); } catch {}
 
     ui.runBtn.addEventListener('click', async ()=>{
@@ -343,18 +313,15 @@
       const k = qs('cvc5-example').value;
       loadExample(k);
     });
-    // file upload
     const up = qs('cvc5-file');
     up.addEventListener('change', async ()=>{
       const f = up.files && up.files[0]; if (!f) return;
       const text = await f.text(); ui.input.value = text;
     });
-    // download output
     qs('cvc5-dl-out').addEventListener('click', ()=>{
       const blob = new Blob([ui.output.textContent || ''], {type:'text/plain'});
       const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='cvc5-output.txt'; a.click();
     });
-    // clear
   qs('cvc5-clear').addEventListener('click', ()=>{ ui.input.value=''; clear(ui.output); if (ui.errors) clear(ui.errors); clear(ui.stats); });
 
     setStatus('Ready');

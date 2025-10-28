@@ -16,12 +16,10 @@ if command -v sha256sum >/dev/null; then
   echo "SHA256:"; sha256sum "$JS" "$WASM"
 fi
 
-# Quick sanity: ensure MODULARIZE pattern present in glue JS
 if ! grep -q "MODULARIZE" "$JS"; then
   echo "Warning: cvc5.js may not be built with -s MODULARIZE" >&2
 fi
 
-# Heuristic checks for memory growth support
 if grep -qE "emscripten_resize_heap|ALLOW_MEMORY_GROWTH" "$JS"; then
   echo "Memory growth: ENABLED (heuristic)"
 else
