@@ -131,10 +131,28 @@
       return p;
     }
 
+    function stripBanner(text){
+      if (!text) return '';
+      const lines = text.split(/\r?\n/);
+      // Common cvc5 banner/warranty lines to filter when not verbose
+      const bannerRe = /^(cvc5|\(c\)|Copyright|This is free software|website|http(s)?:\/\/cvc5\.github\.io|Git version|Configured with|Linked to|Compiled on)/i;
+      let i = 0;
+      while (i < lines.length && (lines[i].trim() === '' || bannerRe.test(lines[i]))) i++;
+      // Also drop a single trailing blank line after banner, if present
+      if (i < lines.length && lines[i].trim() === '') i++;
+      return lines.slice(i).join('\n');
+    }
+
     function finish(code){
       const dt = (performance.now() - start).toFixed(1);
-      appendOut(ui.output, out.join('\n'));
-      if (err.length) appendOut(ui.output, '\n[stderr]\n' + err.join('\n'));
+      let outText = out.join('\n');
+      let errText = err.join('\n');
+      if (!opts.verbose) {
+        outText = stripBanner(outText);
+        errText = stripBanner(errText);
+      }
+      if (outText) appendOut(ui.output, outText);
+      if (errText) appendOut(ui.output, (outText ? '\n' : '') + '[stderr]\n' + errText);
       ui.stats.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms\nArgs: ' + JSON.stringify(args);
       // Restore prompt and UI state
       window.prompt = originalPrompt;
