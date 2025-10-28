@@ -21,4 +21,11 @@ if ! grep -q "MODULARIZE" "$JS"; then
   echo "Warning: cvc5.js may not be built with -s MODULARIZE" >&2
 fi
 
+# Heuristic checks for memory growth support
+if grep -qE "emscripten_resize_heap|ALLOW_MEMORY_GROWTH" "$JS"; then
+  echo "Memory growth: ENABLED (heuristic)"
+else
+  echo "Warning: Memory growth may be DISABLED. Consider rebuilding with -s ALLOW_MEMORY_GROWTH=1 and a larger -s INITIAL_MEMORY." >&2
+fi
+
 echo "[✓] cvc5 assets look present."

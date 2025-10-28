@@ -6,17 +6,25 @@ To generate WASM-compatible files, you will need the Emscripten SDK (version 3.1
   - Ensure platform-specific dependencies for Emscripten are met (refer to Emscripten's documentation for details).
   - Clone CVC5's source: `git clone https://github.com/cvc5/cvc5.git`.
 
-- **Configuration and Build**:
-  Use CVC5's configuration script with WASM-specific flags. For a web-usable build, select the `JS` or `HTML` mode to include JavaScript glue code for browser integration.
+- **Configuration and Build (with memory growth)**:
+  Use CVC5's configuration script with WASM-specific flags. For a web-usable build, select the `JS` or `HTML` mode to include JavaScript glue code for browser integration. To avoid out-of-memory (OOM) aborts on larger problems, enable memory growth and increase the initial heap size.
   ```
   cd cvc5
-  ./configure.sh --static --static-binary --auto-download --wasm=JS --wasm-flags='-s MODULARIZE' --name=build-wasm
+  ./configure.sh \
+    --static --static-binary --auto-download \
+    --wasm=JS \
+    --wasm-flags='-s MODULARIZE -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=268435456' \
+    --name=build-wasm
   cd build-wasm
   make -j$(nproc)  # Adjust for your system's thread count
   ```
   - `--wasm=JS`: Produces a `.wasm` file and `.js` glue for web or Node.js use.
   - `--wasm=HTML`: Additionally generates an `.html` file for a basic executable demo.
-  - `--wasm-flags`: Customize Emscripten settings (e.g., modularization for easier JavaScript integration; see Emscripten's settings.js for options).
+  - `--wasm-flags`: Customize Emscripten settings:
+    - `-s MODULARIZE` for cleaner integration.
+    - `-s ALLOW_MEMORY_GROWTH=1` to allow the heap to grow at runtime.
+    - `-s INITIAL_MEMORY=268435456` (256MB) to start with a larger heap; increase for big SyGuS problems.
+    - Optional: `-s MAXIMUM_MEMORY=2147483648` (2GB) to cap growth; omit to use Emscripten defaults.
   - The output files (e.g., `cvc5.wasm`, `cvc5.js`, and optionally `cvc5.html`) will be in the `build-wasm/bin` directory.
 
 This process statically links dependencies and results in files suitable for browser execution. Note that WASM builds may incur performance overhead compared to native compilations due to emulation.
@@ -77,12 +85,21 @@ Steps:
 4. Open the interface at `/pages/formal-verification/cvc5` and click Run.
 
 Notes:
-- The workflow pins Emscripten 3.1.18, uses `--wasm=JS` and `-s MODULARIZE` for clean browser integration.
+- The workflow pins Emscripten 3.1.18 and should include memory flags similar to local builds: `-s MODULARIZE -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=268435456` (adjust as needed).
 - You can adjust flags in the workflow if you need a different configuration.
 
 An existing demonstration of this approach is CVC5's official online app at https://cvc5.github.io/app, which is hosted on GitHub Pages and likely utilizes a WASM build for browser-based execution. You can inspect its source or fork the CVC5 repository to adapt it.
 
 - **Limitations**: WASM execution in browsers is sandboxed, so features requiring file system access or external dependencies may need adaptation (e.g., simulate inputs via JavaScript). Performance may vary based on problem complexity and browser resources.
+- **Memory considerations**: If you see `[abort]` or OOM in the Errors panel, rebuild with memory growth enabled and a larger initial heap. Browsers typically cap wasm32 heaps around 2–4GB. Start with 256–512MB initial memory and allow growth.
+**Memory limits and 16GB requests**
+
+- Browser WebAssembly (wasm32) has a hard architectural limit of 4GiB linear memory, and most browsers enforce practical limits between 2–4GiB. Building with 16GiB is not possible on wasm32.
+- The Emscripten flag `-s MEMORY64=1` (wasm64) enables >4GiB address space, but support in browsers is experimental and gated behind flags; most users cannot run wasm64 yet.
+- For workloads that truly require >4GiB:
+  - Prefer running the native cvc5 binary on your machine or a server.
+  - Or run the CLI behind an API and use the browser UI as a thin client.
+  - If you control a bleeding-edge environment, you can experiment with `MEMORY64=1` in the build script and a browser with wasm64 enabled.
 - **Testing**: Verify the WASM module locally using a simple HTTP server (e.g., `python -m http.server`) before deploying.
 - **Updates**: If you modify CVC5's source or interface, recompile and redeploy to GitHub.
 
