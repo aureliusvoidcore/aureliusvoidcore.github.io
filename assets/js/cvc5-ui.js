@@ -130,6 +130,13 @@
       return p;
     }
 
+    // Capture browser console during run to surface unexpected errors
+    const origConsole = { log: console.log, warn: console.warn, error: console.error };
+    const consoleBuf = { log: [], warn: [], error: [] };
+    console.log = (...a)=>{ try { consoleBuf.log.push(a.map(String).join(' ')); } catch{} finally { origConsole.log.apply(console, a); } };
+    console.warn = (...a)=>{ try { consoleBuf.warn.push(a.map(String).join(' ')); } catch{} finally { origConsole.warn.apply(console, a); } };
+    console.error = (...a)=>{ try { consoleBuf.error.push(a.map(String).join(' ')); } catch{} finally { origConsole.error.apply(console, a); } };
+
     function stripBanner(text){
       if (!text) return '';
       const lines = text.split(/\r?\n/);
@@ -156,8 +163,13 @@
         // Strip only the initial banner lines from stderr, keep all other errors
         errText = stripBanner(errText);
       }
+      // Restore console
+      console.log = origConsole.log; console.warn = origConsole.warn; console.error = origConsole.error;
+
       if (outText) appendOut(ui.output, outText);
       if (errText) appendOut(ui.output, (outText ? '\n' : '') + '[stderr]\n' + errText);
+      if (consoleBuf.error.length) appendOut(ui.output, (outText || errText ? '\n' : '') + '[console.error]\n' + consoleBuf.error.join('\n'));
+      if (consoleBuf.warn.length) appendOut(ui.output, (outText || errText || consoleBuf.error.length ? '\n' : '') + '[console.warn]\n' + consoleBuf.warn.join('\n'));
       ui.stats.textContent = 'Exit code: ' + code + '\nTime: ' + dt + ' ms\nArgs: ' + JSON.stringify(args);
       // Restore prompt and UI state
       window.prompt = originalPrompt;
@@ -191,7 +203,8 @@
             locateFile,
             // onExit may not fire if glue forces noExitRuntime=true; also hook quit
             onExit: (code)=> done(code),
-            quit: (status, toThrow)=>{ try { done(status ?? 0); } finally { throw toThrow; } },
+            // swallow internal throw; we capture status and outputs above
+            quit: (status /*, toThrow*/)=>{ done(status ?? 0); },
             onAbort: (what)=>{ appendOut(ui.output, '[abort] ' + what); done(-1); },
           }).catch((e)=>{ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); });
         } catch(e){ appendOut(ui.output, 'Exception: ' + e.message); resolve(finish(-1)); }
@@ -207,7 +220,8 @@
             locateFile,
             // onExit may not fire if glue forces noExitRuntime=true; also hook quit
             onExit: (code)=> done(code),
-            quit: (status, toThrow)=>{ try { done(status ?? 0); } finally { throw toThrow; } },
+            // swallow internal throw; we capture status and outputs above
+            quit: (status /*, toThrow*/)=>{ done(status ?? 0); },
             onAbort: (what)=>{ appendOut(ui.output, '[abort] ' + what); done(-1); },
           };
           const s = document.createElement('script');
