@@ -7,7 +7,7 @@ permalink: /pages/formal-verification/cvc5
 <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/cvc5.css">
 
 <h2>CVC5 WebAssembly Interface</h2>
-<p class="meta">Run SMT-LIB and SyGuS queries directly in the browser using a WebAssembly build of <a href="https://cvc5.github.io/" target="_blank" rel="noopener">cvc5</a>. Place <code>cvc5.js</code> and <code>cvc5.wasm</code> under <code>assets/cvc5/</code> in this site to enable execution.</p>
+<p class="meta">Run SMT-LIB and SyGuS queries directly in your browser using a WebAssembly build of <a href="https://cvc5.github.io/" target="_blank" rel="noopener">cvc5</a>. This page loads the solver from <code>assets/cvc5/</code>. If the artifacts are missing, the loader will show a clear error.</p>
 
 <div class="cvc5-wrap">
   <div class="cvc5-col">
@@ -74,7 +74,7 @@ permalink: /pages/formal-verification/cvc5
       <div class="cvc5-row">
         <select id="cvc5-example" class="cp-select">
           <option value="smt">SMT: QF_BV model</option>
-          <option value="sygus">SyGuS: synth f(x,y)</option>
+          <option value="sygus">SyGuS: invariant synthesis (inv-f)</option>
         </select>
         <button id="cvc5-load" class="button">Load</button>
       </div>

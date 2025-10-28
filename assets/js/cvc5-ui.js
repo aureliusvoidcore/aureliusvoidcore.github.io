@@ -1,4 +1,6 @@
 (function(){
+  const UI_VER = 'cvc5-ui/2025-10-28-1';
+  try { console.log('[cvc5-ui] loaded', UI_VER); } catch {}
   const ui = {
     input: null,
     output: null,
@@ -90,7 +92,9 @@
     }
     if (opts.tlimit && opts.tlimit > 0) args.push('--tlimit-per=' + parseInt(opts.tlimit,10));
     if (opts.seed) args.push('--seed=' + parseInt(opts.seed,10));
-  if (opts.stats) args.push('--stats');
+    if (opts.stats) args.push('--stats');
+    // Increase CVC5 internal verbosity when requested
+    if (opts.verbose) args.push('--verbosity=4');
     if (opts.extra) {
       try {
         const extra = opts.extra.split(/\s+/).filter(Boolean);
@@ -122,8 +126,10 @@
       return inBytes[inIdx++];
     }
 
-    const args = buildArgs(opts);
+  const args = buildArgs(opts);
     args.push('-');
+  const kind = (opts && opts.lang === 'sygus2') ? 'sygus' : 'smt';
+  try { console.log(`[cvc5] start kind=${kind} args=${args.join(' ')}`); } catch {}
 
     function locateFile(p){
       if (p.endsWith('.wasm')) return (window.__CVC5_WASM_PATH__) || (window.__baseurl__ || '') + '/assets/cvc5/cvc5.wasm';
@@ -170,7 +176,28 @@
       if (allErrLines.length) appendOut(ui.errors || ui.output, allErrLines.join('\n'));
       if (opts && opts.stats && ui.stats && statLines.length) appendOut(ui.stats, statLines.join('\n'));
       ui.stats.textContent = ['Exit code: ' + code, 'Time: ' + dt + ' ms'].join('\n');
-      try { console.info('[cvc5 args]', args); } catch {}
+      try {
+        if (opts && opts.verbose){
+          const lines = [];
+          lines.push(`[cvc5] ${kind.toUpperCase()} run`);
+          lines.push('args: ' + args.join(' '));
+          lines.push('input bytes: ' + inBytes.length);
+          lines.push('time ms: ' + dt);
+          lines.push('exit code: ' + code);
+          lines.push('stdout bytes: ' + rawOut.length);
+          lines.push('stderr bytes: ' + errText.length);
+          if (outText) { lines.push('--- stdout ---'); lines.push(outText); }
+          if (errText) { lines.push('--- stderr ---'); lines.push(errText); }
+          lines.push('--- end ---');
+          console.log(lines.join('\n'));
+        }
+        // Always print a one-line summary for quick inspection
+        console.log(`[cvc5] done kind=${kind} code=${code} ms=${dt} outBytes=${rawOut.length} errBytes=${errText.length}`);
+        // Duplicate outputs to console for easier debugging regardless of language
+        if (args && args.length) console.log('[cvc5] args ' + args.join(' '));
+        if (outText) console.log('[cvc5] stdout\n' + outText);
+        if (errText) console.log('[cvc5] stderr\n' + errText);
+      } catch {}
       if (code !== 0 || allErrLines.length) setStatus('Error'); else setStatus('Ready');
       try { if (ui.errors) ui.errors.scrollTop = ui.errors.scrollHeight; } catch {}
       busy = false;
@@ -269,13 +296,17 @@
 (assert (= (bvadd a b) #x2a))
 (check-sat)
 (get-model)`;
-    const SY_EX = `(set-logic LIA)
-(synth-fun f ((x Int) (y Int)) Int
-  ((Start Int (x y 0 1 (+ Start Start) (- Start) (ite StartBool Start Start)))
-   (StartBool Bool ((<= Start Start) (= Start Start)))) )
-(constraint (= (f 0 0) 0))
-(constraint (= (f 1 0) 1))
-(constraint (= (f 0 1) 1))
+  const SY_EX = `; The printed output for this example should be equivalent to:
+; (
+;   (define-fun inv-f ((x Int)) Bool (not (>= x 11)))
+; )
+
+(set-logic LIA)
+(synth-fun inv-f ((x Int)) Bool)
+(define-fun pre-f ((x Int)) Bool (= x 0))
+(define-fun trans-f ((x Int) (xp Int)) Bool (ite (< x 10) (= xp (+ x 1)) (= xp x)))
+(define-fun post-f ((x Int)) Bool (<= x 10))
+(inv-constraint inv-f pre-f trans-f post-f)
 (check-synth)`;
     ui.input.value = (kind === 'sygus') ? SY_EX : SMT_EX;
     if (kind === 'sygus') qs('cvc5-lang').value = 'sygus2';
