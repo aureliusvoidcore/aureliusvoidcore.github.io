@@ -1,0 +1,309 @@
+---
+layout: default
+title: ABC (WASM) – Formal Verification Harness
+permalink: /pages/formal-verification/abc
+---
+
+<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/cvc5.css">
+
+<h2>ABC WebAssembly – Formal Verification</h2>
+<p class="meta">Execute PDR, BMC, and CEC directly in the browser using a WebAssembly build of Berkeley ABC. Artifacts are managed in an in‑memory filesystem and can be downloaded.</p>
+
+<div class="cvc5-wrap">
+  <div class="cvc5-col">
+    <div class="cvc5-card">
+      <h3>Input</h3>
+      <div class="cvc5-row"><label for="abc-input-format">Format</label>
+        <select id="abc-input-format" class="cp-select">
+          <option value="blif">BLIF</option>
+          <option value="aiger">AIGER</option>
+          <option value="verilog">Verilog</option>
+        </select>
+      </div>
+      <div class="cvc5-row">
+        <label class="button" style="cursor:pointer;">
+          Upload<input id="abc-file" type="file" accept=".blif,.aig,.aiger,.v" style="display:none;" />
+        </label>
+        <span id="abc-file-name" class="cvc5-status"></span>
+      </div>
+      <textarea id="abc-input" class="cvc5-textarea" placeholder="Paste BLIF, AIGER (text), or Verilog here..."></textarea>
+    </div>
+
+    <div class="cvc5-card">
+      <h3>Verification</h3>
+      <div class="cvc5-row">
+        <button id="abc-run-pdr" class="button">Run PDR</button>
+        <button id="abc-run-bmc" class="button">Run BMC3</button>
+        <button id="abc-run-cec" class="button">Run CEC (self)</button>
+      </div>
+      <div class="cvc5-row">
+        <label for="abc-extra">Extra ABC commands</label>
+        <input id="abc-extra" type="text" placeholder="Optional; e.g., &equiv; &semi -T 10;" />
+      </div>
+    </div>
+
+    <div class="cvc5-card">
+      <h3>Examples (from repo tests)</h3>
+      <div class="cvc5-row">
+        <select id="abc-example" class="cp-select">
+          <option value="">Select an example…</option>
+          <option value="dup_safe">PDR: dup_safe.blif (10 FF safe)</option>
+          <option value="dup_safe_complex">PDR: dup_safe_complex.blif (complex safe)</option>
+          <option value="pdr_extreme">PDR: pdr_extreme.blif (88 FF stress)</option>
+        </select>
+        <button id="abc-load" class="button">Load</button>
+        <button id="abc-run-example" class="button">Run PDR on Example</button>
+      </div>
+      <p class="meta">Files are loaded from <code>/abc_build/node_test/</code> and executed in-memory.</p>
+    </div>
+  </div>
+
+  <div class="cvc5-col">
+    <div class="cvc5-card">
+      <h3>Status</h3>
+      <pre id="abc-status" class="cvc5-pre">Initializing ABC…</pre>
+    </div>
+    <div class="cvc5-card">
+      <h3>Console Output</h3>
+      <div class="cvc5-row">
+        <button id="abc-clear" class="button">Clear output</button>
+        <button id="abc-download" class="button">Download console</button>
+      </div>
+      <pre id="abc-output" class="cvc5-pre"></pre>
+    </div>
+    <div class="cvc5-card">
+      <h3>Artifacts</h3>
+      <div class="cvc5-row"><label for="abc-filename">Filename</label>
+        <input id="abc-filename" type="text" placeholder="e.g., output.aig, optimized.blif, converted.v" />
+      </div>
+      <div class="cvc5-row">
+        <button id="abc-download-file" class="button">Download file</button>
+        <button id="abc-list-files" class="button">List files</button>
+      </div>
+      <pre id="abc-files" class="cvc5-pre" style="min-height: 80px"></pre>
+    </div>
+  </div>
+</div>
+
+<script src="{{ site.baseurl }}/abc_build/abc.js"></script>
+<script src="{{ site.baseurl }}/abc_build/abc-wrapper.js"></script>
+<script>
+  let ABC = null;
+  let currentOutput = '';
+  let loadedExample = '';
+  let uploadedBinary = null; // Uint8Array for AIGER binaries
+  let uploadedBinaryName = '';
+  let lastOutputFileName = '';
+
+  function log(text) {
+    currentOutput += text + '\n';
+    const el = document.getElementById('abc-output');
+    el.textContent = currentOutput;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function setStatus(text) {
+    document.getElementById('abc-status').textContent = text;
+  }
+
+  async function initABC() {
+    try {
+      ABC = new ABCWrapper();
+      await ABC.initialize({
+        print: (t) => log(t),
+        printErr: (t) => log('ERR: ' + t)
+      });
+      setStatus('ABC module ready.');
+      log('[init] ABC runtime initialized.');
+      log('[hint] Use "print_stats" to view network statistics.');
+    } catch (e) {
+      setStatus('Failed to initialize ABC: ' + e.message);
+      log('[error] ' + e.message);
+    }
+  }
+
+  function inferInputExt(fmt) {
+    if (fmt === 'aiger') return 'aig';
+    if (fmt === 'verilog') return 'v';
+    return 'blif';
+  }
+
+  function cmdReadByFormat(fmt, file) {
+    if (fmt === 'aiger') return `read_aiger ${file}`;
+    if (fmt === 'verilog') return `read_verilog ${file}`;
+    if (fmt === 'blif') return `read_blif ${file}`;
+    return `read ${file}`;
+  }
+
+  function writeInputToFS() {
+    const fmt = document.getElementById('abc-input-format').value;
+    const ext = inferInputExt(fmt);
+    const fname = `input.${ext}`;
+
+    if (fmt === 'aiger' && uploadedBinary) {
+      ABC.writeFile(fname, uploadedBinary);
+    } else {
+      const code = document.getElementById('abc-input').value;
+      if (!code.trim()) {
+        throw new Error('No input provided');
+      }
+      ABC.writeFile(fname, code);
+    }
+    return { fmt, fname };
+  }
+
+  function runFlow(baseReadCmd, flowCmd) {
+    const extra = document.getElementById('abc-extra').value.trim();
+    const combined = [baseReadCmd, 'strash', extra, flowCmd].filter(Boolean).join('; ');
+    log('> ' + combined);
+    const res = ABC.executeCommand(combined);
+    if (res.output) log(res.output);
+    if (res.error) log(res.error);
+    return res.success;
+  }
+
+  // Handlers
+  document.getElementById('abc-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const isAiger = file.name.endsWith('.aig') || file.name.endsWith('.aiger');
+    if (isAiger) {
+      const r2 = new FileReader();
+      r2.onload = (ev) => {
+        uploadedBinary = new Uint8Array(ev.target.result);
+        uploadedBinaryName = file.name;
+        document.getElementById('abc-input').value = '';
+        document.getElementById('abc-file-name').textContent = `Loaded binary AIGER: ${file.name}`;
+        document.getElementById('abc-input-format').value = 'aiger';
+        log(`Loaded binary AIGER: ${file.name}`);
+      };
+      r2.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        uploadedBinary = null; uploadedBinaryName = '';
+        document.getElementById('abc-input').value = ev.target.result;
+        document.getElementById('abc-file-name').textContent = `Loaded: ${file.name}`;
+        log(`Loaded file: ${file.name}`);
+        if (file.name.endsWith('.v')) {
+          document.getElementById('abc-input-format').value = 'verilog';
+        } else if (file.name.endsWith('.blif')) {
+          document.getElementById('abc-input-format').value = 'blif';
+        }
+      };
+      reader.readAsText(file);
+    }
+  });
+
+  document.getElementById('abc-run-pdr').addEventListener('click', () => {
+    try {
+      const { fmt, fname } = writeInputToFS();
+      const readCmd = cmdReadByFormat(fmt, fname);
+      // Add &equiv reduction optionally via Extra commands
+      runFlow(readCmd, 'pdr -v');
+    } catch (e) { log('ERROR: ' + e.message); }
+  });
+
+  document.getElementById('abc-run-bmc').addEventListener('click', () => {
+    try {
+      const { fmt, fname } = writeInputToFS();
+      const readCmd = cmdReadByFormat(fmt, fname);
+      runFlow(readCmd, 'bmc3 -v');
+    } catch (e) { log('ERROR: ' + e.message); }
+  });
+
+  document.getElementById('abc-run-cec').addEventListener('click', () => {
+    try {
+      const { fmt, fname } = writeInputToFS();
+      const readCmd = cmdReadByFormat(fmt, fname);
+      // Self-equivalence is robust to naming; for two-file equivalence, prefer miter or &cec.
+      runFlow(readCmd, 'cec');
+    } catch (e) { log('ERROR: ' + e.message); }
+  });
+
+  async function fetchExample(name) {
+    const map = {
+      dup_safe: '{{ site.baseurl }}/abc_build/node_test/dup_safe.blif',
+      dup_safe_complex: '{{ site.baseurl }}/abc_build/node_test/dup_safe_complex.blif',
+      pdr_extreme: '{{ site.baseurl }}/abc_build/node_test/pdr_extreme.blif'
+    };
+    const url = map[name];
+    if (!url) throw new Error('Unknown example "' + name + '"');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch example: ' + res.status);
+    return await res.text();
+  }
+
+  document.getElementById('abc-load').addEventListener('click', async () => {
+    const val = document.getElementById('abc-example').value;
+    if (!val) return;
+    try {
+      const txt = await fetchExample(val);
+      document.getElementById('abc-input').value = txt;
+      document.getElementById('abc-input-format').value = 'blif';
+      loadedExample = val;
+      log(`Loaded example: ${val}`);
+    } catch (e) { log('ERROR: ' + e.message); }
+  });
+
+  document.getElementById('abc-run-example').addEventListener('click', async () => {
+    const val = loadedExample || document.getElementById('abc-example').value;
+    if (!val) { log('Pick an example first.'); return; }
+    try {
+      // Write current editor to FS and run PDR, with optional sequential reduction
+      const { fname } = writeInputToFS();
+      const readCmd = cmdReadByFormat('blif', fname);
+      // Provide a helpful default: pre-reduction then PDR
+      // Users can add "&equiv; &semi -T 10;" in the Extra field to reduce latches.
+      runFlow(readCmd, 'pdr -v');
+    } catch (e) { log('ERROR: ' + e.message); }
+  });
+
+  document.getElementById('abc-clear').addEventListener('click', () => {
+    currentOutput = '';
+    document.getElementById('abc-output').textContent = '';
+  });
+
+  document.getElementById('abc-download').addEventListener('click', () => {
+    const blob = new Blob([currentOutput], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'abc_console.txt'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // List and download artifacts from the virtual filesystem
+  function listFS() {
+    try {
+      const files = ABC.listFiles('/');
+      document.getElementById('abc-files').textContent = files.join('\n');
+      return files;
+    } catch (e) {
+      log('ERROR: ' + e.message);
+    }
+  }
+
+  function downloadFSFile(name) {
+    try {
+      if (!name) throw new Error('Specify a filename to download');
+      const data = ABC.readFile(name); // Uint8Array or string depending on file
+      const arr = data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
+      const blob = new Blob([arr], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; a.click();
+      URL.revokeObjectURL(url);
+      log(`[download] ${name}`);
+    } catch (e) {
+      log('ERROR: ' + e.message);
+    }
+  }
+
+  document.getElementById('abc-list-files').addEventListener('click', () => { listFS(); });
+  document.getElementById('abc-download-file').addEventListener('click', () => {
+    const name = document.getElementById('abc-filename').value.trim();
+    downloadFSFile(name || lastOutputFileName);
+  });
+
+  window.addEventListener('load', initABC);
+</script>

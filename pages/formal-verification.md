@@ -10,6 +10,8 @@ This section collects property specifications, model checking workflows, and SAT
 ### Tools
 
 - CVC5 Web (WASM): <a class="button" href="{{ site.baseurl }}/pages/formal-verification/cvc5">Open Advanced Interface</a>
+ - ABC Web (WASM): <a class="button" href="{{ site.baseurl }}/pages/formal-verification/abc">Open Formal Harness (PDR/BMC/CEC)</a>
+ - ABC Demo UI: <a class="button" href="{{ site.baseurl }}/abc_build/" target="_blank" rel="noopener">Open abc_build demo</a>
 
 ### Property example (SVA)
 

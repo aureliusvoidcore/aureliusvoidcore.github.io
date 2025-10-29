@@ -1,0 +1,46 @@
+.model dup_safe
+.inputs en
+.latch nx0 x0 0
+.latch nx1 x1 0
+.latch nx2 x2 0
+.latch nx3 x3 0
+.latch nx4 x4 0
+.latch nx5 x5 0
+.latch nx6 x6 0
+.latch nx7 x7 0
+.latch nx8 x8 0
+.latch nx9 x9 0
+.names en x0 nx0
+01 1
+10 1
+.names en x1 nx1
+01 1
+10 1
+.names en x2 nx2
+01 1
+10 1
+.names en x3 nx3
+01 1
+10 1
+.names en x4 nx4
+01 1
+10 1
+.names en x5 nx5
+01 1
+10 1
+.names en x6 nx6
+01 1
+10 1
+.names en x7 nx7
+01 1
+10 1
+.names en x8 nx8
+01 1
+10 1
+.names en x9 nx9
+01 1
+10 1
+.names x0 x1 bad
+10 1
+.outputs bad
+.end
