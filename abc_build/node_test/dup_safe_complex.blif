@@ -1,0 +1,248 @@
+.model dup_safe_complex
+.inputs en reset
+.latch nx0 x0 0
+.latch nx1 x1 0
+.latch nx2 x2 0
+.latch nx3 x3 0
+.latch nx4 x4 0
+.latch nx5 x5 0
+.latch nx6 x6 0
+.latch nx7 x7 0
+.latch nx8 x8 0
+.latch nx9 x9 0
+.latch nx10 x10 0
+.latch nx11 x11 0
+.latch nx12 x12 0
+.latch nx13 x13 0
+.latch nx14 x14 0
+.latch nx15 x15 0
+.latch nx16 x16 0
+.latch nx17 x17 0
+.latch nx18 x18 0
+.latch nx19 x19 0
+.latch nx20 x20 0
+.latch nx21 x21 0
+.latch nx22 x22 0
+.latch nx23 x23 0
+.latch nx24 x24 0
+.latch nx25 x25 0
+.latch nx26 x26 0
+.latch nx27 x27 0
+.latch nx28 x28 0
+.latch nx29 x29 0
+.latch nx30 x30 0
+.latch nx31 x31 0
+.latch nx32 x32 0
+.latch nx33 x33 0
+.latch nx34 x34 0
+.latch nx35 x35 0
+.latch nx36 x36 0
+.latch nx37 x37 0
+.latch nx38 x38 0
+.latch nx39 x39 0
+.latch ncounter0 counter0 0
+.latch ncounter1 counter1 0
+.latch ncounter2 counter2 0
+.latch ncounter3 counter3 0
+.latch ncounter4 counter4 0
+.names en x0 nx0
+01 1
+10 1
+.names en x1 nx1
+01 1
+10 1
+.names en x2 nx2
+01 1
+10 1
+.names en x3 nx3
+01 1
+10 1
+.names en x4 nx4
+01 1
+10 1
+.names en x5 nx5
+01 1
+10 1
+.names en x6 nx6
+01 1
+10 1
+.names en x7 nx7
+01 1
+10 1
+.names en x8 nx8
+01 1
+10 1
+.names en x9 nx9
+01 1
+10 1
+.names en x10 nx10
+01 1
+10 1
+.names en x11 nx11
+01 1
+10 1
+.names en x12 nx12
+01 1
+10 1
+.names en x13 nx13
+01 1
+10 1
+.names en x14 nx14
+01 1
+10 1
+.names en x15 nx15
+01 1
+10 1
+.names en x16 nx16
+01 1
+10 1
+.names en x17 nx17
+01 1
+10 1
+.names en x18 nx18
+01 1
+10 1
+.names en x19 nx19
+01 1
+10 1
+.names en x20 nx20
+01 1
+10 1
+.names en x21 nx21
+01 1
+10 1
+.names en x22 nx22
+01 1
+10 1
+.names en x23 nx23
+01 1
+10 1
+.names en x24 nx24
+01 1
+10 1
+.names en x25 nx25
+01 1
+10 1
+.names en x26 nx26
+01 1
+10 1
+.names en x27 nx27
+01 1
+10 1
+.names en x28 nx28
+01 1
+10 1
+.names en x29 nx29
+01 1
+10 1
+.names en x30 nx30
+01 1
+10 1
+.names en x31 nx31
+01 1
+10 1
+.names en x32 nx32
+01 1
+10 1
+.names en x33 nx33
+01 1
+10 1
+.names en x34 nx34
+01 1
+10 1
+.names en x35 nx35
+01 1
+10 1
+.names en x36 nx36
+01 1
+10 1
+.names en x37 nx37
+01 1
+10 1
+.names en x38 nx38
+01 1
+10 1
+.names en x39 nx39
+01 1
+10 1
+.names counter0 ncounter0_tmp
+1 1
+.names ncounter0_tmp counter1 ncounter1_tmp
+01 1
+10 1
+.names ncounter0_tmp ncounter1_tmp counter2 ncounter2_tmp
+001 1
+010 1
+100 1
+111 1
+.names ncounter0_tmp ncounter1_tmp ncounter2_tmp counter3 ncounter3_tmp
+0001 1
+0010 1
+0100 1
+1000 1
+0111 1
+1011 1
+1101 1
+1110 1
+.names ncounter0_tmp ncounter1_tmp ncounter2_tmp ncounter3_tmp counter4 ncounter4_tmp
+00001 1
+00010 1
+00100 1
+01000 1
+10000 1
+00111 1
+01011 1
+01101 1
+01110 1
+10011 1
+10101 1
+10110 1
+11001 1
+11010 1
+11100 1
+11111 1
+.names reset ncounter0_tmp ncounter0
+01 1
+.names reset ncounter1_tmp ncounter1
+01 1
+.names reset ncounter2_tmp ncounter2
+01 1
+.names reset ncounter3_tmp ncounter3
+01 1
+.names reset ncounter4_tmp ncounter4
+01 1
+.names x0 x1 mismatch01
+10 1
+.names x5 x6 mismatch56
+10 1
+.names x10 x11 mismatch1011
+10 1
+.names x15 x16 mismatch1516
+10 1
+.names x20 x21 mismatch2021
+10 1
+.names x25 x26 mismatch2526
+10 1
+.names x30 x31 mismatch3031
+10 1
+.names x35 x36 mismatch3536
+10 1
+.names mismatch01 mismatch56 mismatch1011 mismatch1516 or1
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names mismatch2021 mismatch2526 mismatch3031 mismatch3536 or2
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names or1 or2 any_mismatch
+1- 1
+-1 1
+.names counter4 counter_max
+1 1
+.names any_mismatch counter_max bad
+11 1
+.outputs bad
+.end

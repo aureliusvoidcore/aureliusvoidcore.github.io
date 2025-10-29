@@ -1,0 +1,469 @@
+---
+layout: default
+title: ABC WebAssembly Demo (FPGA)
+permalink: /pages/fpga/abc
+---
+
+<div class="abc-demo">
+    <style>
+        .abc-demo * { box-sizing: border-box; }
+
+        /* Use site theme colors/containers */
+        .abc-demo .abc-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: transparent;
+        }
+
+        .abc-demo header {
+            background: transparent;
+            color: var(--text);
+            padding: 10px 0 0;
+            text-align: center;
+        }
+
+        .abc-demo h1 { margin-bottom: 6px; }
+        .abc-demo .subtitle { font-size: 0.95em; color: var(--muted); }
+
+        .abc-demo .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 16px 0 0;
+        }
+
+        .abc-demo .panel {
+            background: rgba(0, 15, 18, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--glow-box), 0 0 0 1px rgba(0,255,255,0.06) inset;
+        }
+
+        .abc-demo .panel h2 { margin-bottom: 12px; color: var(--neon-blue); }
+
+        .abc-demo .status {
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: rgba(0, 20, 22, 0.4);
+            box-shadow: var(--glow-box);
+            color: var(--text);
+        }
+        .abc-demo .status.loading { background: linear-gradient(90deg, rgba(0,255,160,0.12), rgba(0,255,255,0.12)); color: #03251b; }
+        .abc-demo .status.ready   { background: rgba(0,255,136,0.10); }
+        .abc-demo .status.error   { background: rgba(255,34,68,0.12); }
+
+        .abc-demo .form-group { margin-bottom: 14px; }
+        .abc-demo label { display: block; margin-bottom: 6px; color: var(--muted); font-weight: 500; }
+        .abc-demo textarea, .abc-demo select, .abc-demo input[type="file"] {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+            background: #040607; color: var(--text);
+            font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        }
+        .abc-demo textarea { min-height: 200px; resize: vertical; }
+
+        .abc-demo .button-group { display: flex; gap: 10px; margin-bottom: 12px; }
+        .abc-demo button {
+            flex: 1; padding: 10px 16px;
+            background: rgba(0, 20, 22, 0.4);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            box-shadow: var(--glow-box);
+        }
+        .abc-demo button:hover { transform: translateY(-1px); }
+        .abc-demo button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        .abc-demo .output-section { grid-column: 1 / -1; }
+        .abc-demo .output {
+            background: #040607; color: var(--text);
+            padding: 12px; border-radius: 10px;
+            border: 1px solid var(--border);
+            font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            min-height: 300px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;
+            box-shadow: 0 0 20px rgba(0,255,255,0.06);
+        }
+
+        .abc-demo .examples { margin-top: 10px; }
+        .abc-demo .example-btn {
+            display: inline-block; margin: 4px; padding: 6px 12px;
+            background: rgba(0, 20, 22, 0.4); border: 1px solid var(--border);
+            border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--text);
+            box-shadow: var(--glow-box);
+        }
+        .abc-demo .example-btn:hover { background: linear-gradient(90deg, rgba(0,255,160,0.25), rgba(0,255,255,0.25)); color: #03251b; }
+
+        .abc-demo .commands-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+        .abc-demo .command-item {
+            padding: 8px 12px; background: rgba(0, 15, 18, 0.5); border: 1px solid var(--border);
+            border-radius: 10px; font-size: 13px; text-align: center; cursor: pointer; color: var(--text);
+            box-shadow: var(--glow-box);
+        }
+        .abc-demo .command-item:hover { background: linear-gradient(90deg, rgba(0,255,160,0.25), rgba(0,255,255,0.25)); color: #03251b; transform: translateY(-1px); }
+
+        @media (max-width: 968px) { .abc-demo .main-content { grid-template-columns: 1fr; } }
+    </style>
+
+    <div class="abc-container">
+        <header>
+            <h1>ABC WebAssembly</h1>
+            <p class="subtitle">Synthesis and Formal Verification</p>
+            <p class="subtitle">AIGER • BLIF • Verilog</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Status Panel -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <h2>System Status</h2>
+                <div id="status" class="status loading">⏳ Loading ABC WebAssembly module...</div>
+            </div>
+
+            <!-- Input Panel -->
+            <div class="panel">
+                <h2>Input</h2>
+                <div class="form-group">
+                    <label for="inputFormat">Input Format:</label>
+                    <select id="inputFormat">
+                        <option value="blif">BLIF</option>
+                        <option value="aiger">AIGER</option>
+                        <option value="verilog">Verilog</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="inputFile">Upload File (optional):</label>
+                    <input type="file" id="inputFile" accept=".blif,.aig,.aiger,.v">
+                </div>
+                <div class="form-group">
+                    <label for="inputCode">Or Paste Code:</label>
+                    <textarea id="inputCode" placeholder="Paste your BLIF, AIGER, or Verilog code here..."></textarea>
+                </div>
+                <div class="examples">
+                    <strong>Examples:</strong>
+                    <span class="example-btn" onclick="loadExample('blif')">Simple BLIF</span>
+                    <span class="example-btn" onclick="loadExample('adder')">Full Adder</span>
+                    <span class="example-btn" onclick="loadExample('mux')">Multiplexer</span>
+                </div>
+            </div>
+
+            <!-- Synthesis Panel -->
+            <div class="panel">
+                <h2>Synthesis Options</h2>
+                <div class="form-group">
+                    <label for="outputFormat">Output Format:</label>
+                    <select id="outputFormat">
+                        <option value="aig">AIGER</option>
+                        <option value="blif">BLIF</option>
+                        <option value="verilog">Verilog</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="synthCommands">Synthesis Commands (one per line):</label>
+                    <textarea id="synthCommands" rows="8">strash
+balance
+rewrite
+rewrite -z
+balance
+rewrite
+balance</textarea>
+                </div>
+                <div class="button-group">
+                    <button onclick="runSynthesis()" id="synthBtn">Run synthesis</button>
+                    <button onclick="resetABC()" id="resetBtn">Reset</button>
+                </div>
+                <strong>Quick Commands:</strong>
+                <div class="commands-list">
+                    <div class="command-item" onclick="runCommand('print_stats')">Stats</div>
+                    <div class="command-item" onclick="runCommand('strash')">Strash</div>
+                    <div class="command-item" onclick="runCommand('balance')">Balance</div>
+                    <div class="command-item" onclick="runCommand('rewrite')">Rewrite</div>
+                    <div class="command-item" onclick="runCommand('refactor')">Refactor</div>
+                    <div class="command-item" onclick="runCommand('map')">Map</div>
+                </div>
+            </div>
+
+            <!-- Recipes Panel (site-themed, adds examples without altering existing UI) -->
+            <div class="panel">
+                <h2>Recipes</h2>
+                <div class="form-group">
+                    <label for="recipeSelect">Pre-verified synthesis scripts</label>
+                    <select id="recipeSelect">
+                        <option value="">Select a recipe…</option>
+                        <option value="r1">R1: dup_safe.blif → optimize → AIGER (out_basic.aig)</option>
+                        <option value="r2">R2: dup_safe_complex.blif → TI optimize → BLIF (out_resyn.blif)</option>
+                        <option value="r3">R3: pdr_extreme.blif → AIGER → LUT6 map → Verilog (out_mapped.v)</option>
+                        <option value="r4">R4: dup_safe.blif → iterated refactor/rewrite → AIGER+BLIF</option>
+                        <option value="r5">R5: dup_safe_complex.blif → AIGER roundtrip → Verilog</option>
+                        <option value="eq1">EQ1: Equivalence after optimization (miter + SAT)</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button onclick="loadRecipe()">Load script</button>
+                    <button onclick="runRecipe()">Load & run</button>
+                </div>
+                <p class="meta">Recipes fetch BLIF samples from <code>{{ site.baseurl }}/abc_build/node_test/</code> and manage artifacts in-memory.</p>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="panel output-section">
+                <h2>Output</h2>
+                <div class="button-group">
+                    <button onclick="downloadOutput()">Download console</button>
+                    <button onclick="clearOutput()">Clear output</button>
+                </div>
+                <div class="button-group">
+                    <input id="fileNameInput" type="text" placeholder="e.g., output.aig, output.v" style="flex:2; padding:10px; border:1px solid var(--border); border-radius:10px; background:#040607; color:var(--text);" />
+                    <button onclick="downloadFileByName()" style="flex:1;">Download file</button>
+                </div>
+                <div id="output" class="output">ABC output will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ site.baseurl }}/abc_build/abc.js"></script>
+    <script src="{{ site.baseurl }}/abc_build/abc-wrapper.js"></script>
+    <script>
+    let abc = null;
+    let currentOutput = '';
+    let lastOutputFile = '';
+
+        async function init() {
+            try {
+                abc = new ABCWrapper();
+                await abc.initialize();
+                document.getElementById('status').className = 'status ready';
+                document.getElementById('status').textContent = 'ABC module ready.';
+                appendOutput('[init] ABC runtime initialized.\n');
+            } catch (e) {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').textContent = 'Initialization error: ' + e.message;
+                appendOutput('[error] ' + e.message + '\n');
+            }
+        }
+
+        function appendOutput(text) {
+            currentOutput += text;
+            const out = document.getElementById('output');
+            out.textContent = currentOutput;
+            out.scrollTop = out.scrollHeight;
+        }
+
+        function clearOutput() {
+            currentOutput = '';
+            document.getElementById('output').textContent = 'Output cleared.';
+        }
+
+        function loadExample(type) {
+            const examples = {
+                'blif': `.model simple\n.inputs a b c\n.outputs f\n.names a b c f\n111 1\n.end`,
+                'adder': `.model adder\n.inputs a b cin\n.outputs sum cout\n.names a b cin sum\n001 1\n010 1\n100 1\n111 1\n.names a b cin cout\n011 1\n101 1\n110 1\n111 1\n.end`,
+                'mux': `.model mux2to1\n.inputs a b sel\n.outputs out\n.names a sel out\n10 1\n.names b sel n1\n01 1\n.names out n1 final\n1- 1\n-1 1\n.outputs final\n.end`
+            };
+            document.getElementById('inputCode').value = examples[type];
+            document.getElementById('inputFormat').value = 'blif';
+        }
+
+        // Helpers to read according to format
+        function inferInputExt(fmt){
+            if (fmt === 'verilog') return 'v';
+            if (fmt === 'aiger') return 'aig';
+            return 'blif';
+        }
+        function cmdReadByFormat(fmt, file){
+            if (fmt === 'verilog') return `read_verilog ${file}`;
+            if (fmt === 'aiger') return `read_aiger ${file}`;
+            if (fmt === 'blif') return `read_blif ${file}`;
+            return `read ${file}`;
+        }
+
+        // --- Recipes support ---
+        async function fetchText(url){
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`Fetch failed ${r.status} for ${url}`);
+            return await r.text();
+        }
+        async function ensureFile(name, url){
+            // Always overwrite to ensure freshness
+            const txt = await fetchText(url);
+            abc.writeFile(name, txt);
+            appendOutput(`[file] ${name} loaded (${txt.length} chars)\n`);
+        }
+        function setCommands(cmds){
+            document.getElementById('synthCommands').value = cmds.join('\n');
+        }
+
+        function setFormatDefaults(inFmt, outFmt){
+            document.getElementById('inputFormat').value = inFmt;
+            document.getElementById('outputFormat').value = outFmt;
+        }
+
+        async function loadRecipe(){
+            const v = document.getElementById('recipeSelect').value;
+            const base = `{{ site.baseurl }}/abc_build/node_test/`;
+            if (!v) return;
+            try{
+                if (v === 'r1'){
+                    await ensureFile('dup_safe.blif', base + 'dup_safe.blif');
+                    setFormatDefaults('blif','aig');
+                    setCommands([
+                        'strash',
+                        'print_stats',
+                        'balance', 'rewrite', 'rewrite -z', 'balance',
+                        'print_stats'
+                    ]);
+                    document.getElementById('inputCode').value = (await fetchText(base + 'dup_safe.blif'));
+                } else if (v === 'r2'){
+                    await ensureFile('dup_safe_complex.blif', base + 'dup_safe_complex.blif');
+                    setFormatDefaults('blif','blif');
+                    setCommands(['strash','print_stats','balance','rewrite','refactor','rewrite -z','balance','print_stats']);
+                    document.getElementById('inputCode').value = (await fetchText(base + 'dup_safe_complex.blif'));
+                } else if (v === 'r3'){
+                    await ensureFile('pdr_extreme.blif', base + 'pdr_extreme.blif');
+                    setFormatDefaults('blif','verilog');
+                    setCommands(['strash','print_stats','write_aiger tmp.aig','read_aiger tmp.aig','strash','if -K 6','print_stats']);
+                    document.getElementById('inputCode').value = (await fetchText(base + 'pdr_extreme.blif'));
+                } else if (v === 'r4'){
+                    await ensureFile('dup_safe.blif', base + 'dup_safe.blif');
+                    setFormatDefaults('blif','aig');
+                    setCommands(['strash','print_stats','refactor','balance','rewrite','rewrite -z','balance','refactor','print_stats','write_blif out_iter.blif']);
+                    document.getElementById('inputCode').value = (await fetchText(base + 'dup_safe.blif'));
+                } else if (v === 'r5'){
+                    await ensureFile('dup_safe_complex.blif', base + 'dup_safe_complex.blif');
+                    setFormatDefaults('blif','verilog');
+                    setCommands(['strash','write_aiger roundtrip.aig','read_aiger roundtrip.aig','strash','print_stats','balance','rewrite','print_stats']);
+                    document.getElementById('inputCode').value = (await fetchText(base + 'dup_safe_complex.blif'));
+                } else if (v === 'eq1'){
+                    await ensureFile('dup_safe_complex.blif', base + 'dup_safe_complex.blif');
+                    setFormatDefaults('blif','aig');
+                    // Equivalence after optimization: create spec.aig and impl.aig; prove via miter+sat
+                    setCommands([
+                        'strash',
+                        'write_aiger spec.aig',
+                        'balance', 'rewrite',
+                        'write_aiger impl.aig',
+                        'miter spec.aig impl.aig',
+                        'strash', 'sat -v'
+                    ]);
+                    document.getElementById('inputCode').value = (await fetchText(base + 'dup_safe_complex.blif'));
+                }
+                appendOutput(`[recipe] ${v} loaded. Click "Run synthesis" to generate outputs, then use Download file.`);
+            } catch (e){ appendOutput(`[error] ${e.message}`); }
+        }
+
+        async function runRecipe(){
+            await loadRecipe();
+            await runSynthesis();
+        }
+
+        document.getElementById('inputFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('inputCode').value = event.target.result;
+                    appendOutput(`Loaded file: ${file.name}\n`);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        async function runSynthesis() {
+            if (!abc) { alert('ABC not initialized yet!'); return; }
+            const inputCode = document.getElementById('inputCode').value;
+            if (!inputCode.trim()) { alert('Please provide input code!'); return; }
+
+            const inputFormat = document.getElementById('inputFormat').value;
+            const outputFormat = document.getElementById('outputFormat').value;
+            const commands = document.getElementById('synthCommands').value.split('\n').filter(c => c.trim());
+
+            appendOutput('\n=== Starting Synthesis ===\n');
+            appendOutput(`Input: ${inputFormat.toUpperCase()}\n`);
+            appendOutput(`Output: ${outputFormat.toUpperCase()}\n`);
+            appendOutput(`Commands: ${commands.length}\n\n`);
+
+            try {
+                document.getElementById('synthBtn').disabled = true;
+
+                const inputExt = inferInputExt(inputFormat);
+                const inputFile = `input.${inputExt}`;
+                abc.writeFile(inputFile, inputCode);
+                appendOutput(`✓ Written input file: ${inputFile}\n`);
+
+                // IMPORTANT: Run all commands in a single ABC invocation so state persists
+                const readCmd = cmdReadByFormat(inputFormat, inputFile);
+                const outputExt = outputFormat === 'verilog' ? 'v' : (outputFormat === 'aiger' ? 'aig' : outputFormat);
+                const outputFile = `output.${outputExt}`;
+
+                const pipeline = [readCmd, ...commands, `write ${outputFile}`]
+                    .filter(Boolean)
+                    .join('; ');
+
+                appendOutput(`✓ Read file\n`);
+                appendOutput(`\nExecuting batch...\n`);
+                const batchResult = abc.executeCommand(pipeline);
+                if (batchResult.output) appendOutput(batchResult.output + '\n');
+                if (batchResult.error) appendOutput('Error: ' + batchResult.error + '\n');
+                lastOutputFile = outputFile;
+
+                if (abc.fileExists(outputFile)) {
+                    const outputContent = abc.readFile(outputFile, 'utf8');
+                    appendOutput('\n=== Output Content ===\n');
+                    appendOutput(outputContent);
+                    appendOutput('\n\n=== Synthesis Complete ===\n');
+                } else {
+                    appendOutput(`\n[warn] Expected output file not found: ${outputFile}\n`);
+                }
+
+            } catch (e) {
+                appendOutput('\n❌ Error: ' + e.message + '\n');
+            } finally {
+                document.getElementById('synthBtn').disabled = false;
+            }
+        }
+
+        function runCommand(cmd) {
+            if (!abc) { alert('ABC not initialized yet!'); return; }
+            appendOutput(`\n> ${cmd}\n`);
+            const result = abc.executeCommand(cmd);
+            appendOutput(result.output + '\n');
+            if (result.error) appendOutput('Error: ' + result.error + '\n');
+        }
+
+        function resetABC() {
+            if (abc) {
+                abc.reset();
+                appendOutput('\n=== ABC Reset ===\n');
+            }
+        }
+
+        function downloadOutput() {
+            const blob = new Blob([currentOutput], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'abc_output.txt'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadFileByName() {
+            try {
+                const name = (document.getElementById('fileNameInput').value || lastOutputFile || '').trim();
+                if (!name) { alert('Provide a filename (e.g., output.aig)'); return; }
+                const data = abc.readFile(name);
+                const arr = data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
+                const blob = new Blob([arr], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = name; a.click();
+                URL.revokeObjectURL(url);
+                appendOutput(`\n[download] ${name}\n`);
+            } catch (e) {
+                appendOutput(`\n[error] ${e.message}\n`);
+            }
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</div>
