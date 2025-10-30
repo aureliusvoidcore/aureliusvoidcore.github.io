@@ -12,6 +12,12 @@ This section collects property specifications, model checking workflows, and SAT
 - CVC5 Web (WASM): <a class="button" href="{{ site.baseurl }}/pages/formal-verification/cvc5">Open Advanced Interface</a>
  - ABC Web (WASM): <a class="button" href="{{ site.baseurl }}/pages/formal-verification/abc">Open Formal Harness (PDR/BMC/CEC)</a>
 
+### Local LLM (Browser, CPU-only)
+
+- Try our in-browser assistant: [Local LLM (CPU/WASM)](/pages/formal-verification-llm.html)
+- Runs entirely on the visitor’s machine. First use downloads model weights from Hugging Face and caches them in the browser.
+- Start with a small model (e.g., LaMini-Flan-T5 248M). Large 7B–20B models are not practical on CPU in-browser due to memory/download constraints.
+
 ### Property example (SVA)
 
 ```systemverilog
