@@ -1,0 +1,17 @@
+.llm-wrap { max-width: 980px; margin: 0 auto; padding: 1rem; }
+.llm-controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .75rem; }
+.llm-controls select, .llm-controls button { padding: .4rem .6rem; }
+.llm-status { font-size: .9rem; color: #666; margin-left: auto; }
+
+.llm-chat { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 60vh; }
+#llm-messages { flex: 1; padding: .75rem; overflow-y: auto; background: #fafafa; }
+.msg { white-space: pre-wrap; word-break: break-word; padding: .5rem .6rem; border-radius: 6px; margin-bottom: .5rem; }
+.msg-user { background: #e8f0fe; }
+.msg-assistant { background: #f1f8e9; }
+.msg-system { background: #f6f6f6; color: #555; }
+
+.llm-input-row { display: flex; gap: .5rem; border-top: 1px solid #eee; padding: .5rem; background: #fff; }
+#llm-input { flex: 1; resize: vertical; min-height: 3rem; padding: .5rem; }
+#llm-send, #llm-stop { padding: .5rem .8rem; }
+
+.llm-note { font-size: .9rem; color: #555; margin-top: .5rem; }

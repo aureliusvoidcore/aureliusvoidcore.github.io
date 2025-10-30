@@ -1,0 +1,90 @@
+---
+layout: default
+title: Formal Verification — Local LLM (Browser)
+permalink: /pages/formal-verification-llm.html
+---
+
+<link rel="stylesheet" href="/assets/css/llm.css">
+
+<div class="llm-wrap">
+  <h1>Local LLM (runs in your browser)</h1>
+  <p class="llm-note">
+    This page loads a small open model and runs it entirely on your CPU via WebAssembly (no server compute).
+    First run will download model weights from Hugging Face and cache them in your browser.
+    For performance, start with a small model. Large 7B–20B models are not feasible on CPU in-browser due to download size and memory limits.
+  </p>
+
+  <div class="llm-controls">
+    <label for="llm-engine">Engine</label>
+    <select id="llm-engine">
+      <option value="wasm" selected>Transformers.js — CPU/WASM</option>
+      <option value="webgpu">Transformers.js — WebGPU (faster, experimental)</option>
+    </select>
+
+    <label for="llm-model">Model</label>
+    <select id="llm-model" title="Hugging Face model id">
+      <option value="Xenova/Phi-3-mini-4k-instruct">Xenova/Phi-3-mini-4k-instruct (chat, 4k, recommended)</option>
+      <option value="Xenova/Qwen2.5-Coder-1.5B-Instruct">Xenova/Qwen2.5-Coder-1.5B-Instruct (experimental; may be gated)</option>
+      
+      <option value="Xenova/LaMini-Flan-T5-248M">Xenova/LaMini-Flan-T5-248M (text2text, small)</option>
+    </select>
+
+    <label for="llm-task">Task</label>
+    <select id="llm-task">
+      <option value="text2text-generation">text2text-generation (T5-style models)</option>
+      <option value="text-generation">text-generation (causal LMs)</option>
+    </select>
+
+    <label for="llm-dtype">Quantization</label>
+    <select id="llm-dtype">
+      <option value="q4" selected>q4 (smaller download, better CPU perf)</option>
+      <option value="q8">q8</option>
+    </select>
+
+    <label for="llm-max-tokens">Max tokens</label>
+    <input id="llm-max-tokens" type="number" min="32" max="1024" step="32" value="128" style="width: 6em;" />
+
+    <label for="llm-fast">Fast mode</label>
+    <input id="llm-fast" type="checkbox" title="Reduce max tokens and sampling space for speed" />
+
+    <label for="llm-debug">Debug</label>
+    <input id="llm-debug" type="checkbox" />
+    <label for="llm-show-reasoning" title="Show model-provided reasoning fields if present in JSON (e.g., 'reason').">Show reasoning</label>
+    <input id="llm-show-reasoning" type="checkbox" />
+
+    <span id="llm-status" class="llm-status">Idle (CPU/WASM)</span>
+  </div>
+
+  <details>
+    <summary>Logs</summary>
+    <pre id="llm-logs" style="max-height: 220px; overflow: auto; background: #111; color: #ddd; padding: 8px; border-radius: 4px;"></pre>
+  </details>
+  <details>
+    <summary>Raw output</summary>
+    <pre id="llm-raw" style="max-height: 220px; overflow: auto; background: #111; color: #ddd; padding: 8px; border-radius: 4px;"></pre>
+  </details>
+
+  <div class="llm-chat">
+    <div id="llm-messages">
+      <div class="msg msg-system">System: You are a formal verification agent. Use tools (abc, sygus) by emitting JSON like {"tool":"abc","args":"cec -n net1.aig net2.aig"} or return {"final":"..."} with a concise answer.</div>
+    </div>
+    <div class="llm-input-row">
+      <textarea id="llm-input" placeholder="Ask about ABC/CVC5, AIGER/BLIF, PDR, SAT/SMT, specs, or verification flows (Ctrl/Cmd+Enter to send)"></textarea>
+      <button id="llm-send">Send</button>
+      <button id="llm-stop" disabled>Stop</button>
+    </div>
+  </div>
+
+  <p class="llm-note">
+    Tips:
+  <br>• CPU mode is default; if your browser supports WebGPU, pick the WebGPU engine above for a speed boost.
+  <br>• On GitHub Pages, multi-threaded WASM is typically disabled due to missing COOP/COEP headers; this limits CPU performance.
+    <br>• Big models (e.g., 7B–20B) can exceed browser memory limits and require multi-GB downloads — not practical on GitHub Pages.
+    <br>• For best results, ask focused, short questions. This demo keeps history short to fit small models.
+    <br>• Only public, transformers.js-compatible ONNX models will load without authentication. We include: Phi-3-mini (recommended), Qwen2.5 Coder 1.5B (fast), and LaMini-Flan-T5 (text2text).
+    <br>• Optional: GGUF models (e.g., Phi-3.5-mini, StableLM 1.6B) via llama.cpp-wasm can be added; install llama wasm assets to enable that engine.
+    <br>• Tool use: Ask the assistant to run abc (e.g., equivalence checking) — it will emit a JSON tool call that this page executes locally via WASM and then summarize.
+  </p>
+</div>
+
+<script type="module" src="/assets/js/llm.js"></script>

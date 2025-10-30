@@ -1,0 +1,67 @@
+---
+layout: default
+title: LLM Sandbox (Local)
+permalink: /pages/llm-sandbox.html
+---
+
+<link rel="stylesheet" href="/assets/css/llm.css">
+
+<div class="llm-wrap">
+  <h1>LLM Sandbox</h1>
+  <p class="llm-note">Quick sandbox to test local LLM loading, prompts, and tool calls with Debug enabled by default.</p>
+
+  <div class="llm-controls">
+    <label for="llm-engine">Engine</label>
+    <select id="llm-engine">
+      <option value="transformers" selected>Transformers.js (CPU/WASM)</option>
+    </select>
+
+    <label for="llm-model">Model</label>
+    <select id="llm-model" title="Hugging Face model id">
+      <option value="Xenova/Phi-3-mini-4k-instruct" selected>Xenova/Phi-3-mini-4k-instruct (chat, 4k)</option>
+      <option value="Xenova/Qwen2.5-Coder-1.5B-Instruct">Xenova/Qwen2.5-Coder-1.5B-Instruct (experimental)</option>
+      <option value="Xenova/LaMini-Flan-T5-248M">Xenova/LaMini-Flan-T5-248M (text2text)</option>
+    </select>
+
+    <label for="llm-task">Task</label>
+    <select id="llm-task">
+      <option value="text-generation" selected>text-generation</option>
+      <option value="text2text-generation">text2text-generation</option>
+    </select>
+
+    <label for="llm-dtype">Quantization</label>
+    <select id="llm-dtype">
+      <option value="q4" selected>q4</option>
+      <option value="q8">q8</option>
+    </select>
+
+    <label for="llm-debug">Debug</label>
+    <input id="llm-debug" type="checkbox" checked />
+    <label for="llm-show-reasoning">Show reasoning</label>
+    <input id="llm-show-reasoning" type="checkbox" checked />
+
+    <span id="llm-status" class="llm-status">Idle (CPU/WASM)</span>
+  </div>
+
+  <div class="llm-chat">
+    <div id="llm-messages">
+      <div class="msg msg-system">System: You are a formal verification agent. Use tools (abc, sygus) via JSON and then provide a concise final answer.</div>
+    </div>
+    <div class="llm-input-row">
+      <textarea id="llm-input" placeholder="Type a prompt. Try: show a verilog counter"></textarea>
+      <button id="llm-send">Send</button>
+      <button id="llm-stop" disabled>Stop</button>
+    </div>
+  </div>
+
+  <details open>
+    <summary>Logs</summary>
+    <pre id="llm-logs" style="max-height: 220px; overflow: auto; background: #111; color: #ddd; padding: 8px; border-radius: 4px;"></pre>
+  </details>
+  <details open>
+    <summary>Raw output</summary>
+    <pre id="llm-raw" style="max-height: 220px; overflow: auto; background: #111; color: #ddd; padding: 8px; border-radius: 4px;"></pre>
+  </details>
+</div>
+
+<script type="module" src="/assets/js/llm.js"></script>
