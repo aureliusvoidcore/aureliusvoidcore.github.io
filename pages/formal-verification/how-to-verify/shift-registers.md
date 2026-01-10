@@ -2,12 +2,12 @@
 layout: default
 title: Shift registers/pipelines
 permalink: /pages/formal-verification/how-to-verify/shift-registers
+published: true
 ---
 
 # Shift registers/pipelines
 
 ## sr.sv
-
 
 ```systemverilog
 module shift_reg #(

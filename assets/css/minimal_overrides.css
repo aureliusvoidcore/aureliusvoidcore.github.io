@@ -1,0 +1,104 @@
+/* Minimal theme overrides loaded last.
+   Purpose: ensure third-party/widget CSS (syntax highlighting, CodeMirror/editorify)
+   respects the site theme.
+*/
+
+body.theme-minimal .highlight{
+  background: rgba(255,255,255,0.92) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* Make common token colors readable on light background */
+body.theme-minimal .highlight .k,
+body.theme-minimal .highlight .kc,
+body.theme-minimal .highlight .kd,
+body.theme-minimal .highlight .kn,
+body.theme-minimal .highlight .kp,
+body.theme-minimal .highlight .kr,
+body.theme-minimal .highlight .kt,
+body.theme-minimal .highlight .ow{
+  color: #1d4ed8 !important;
+  font-weight: 600;
+}
+body.theme-minimal .highlight .s,
+body.theme-minimal .highlight .s1,
+body.theme-minimal .highlight .s2,
+body.theme-minimal .highlight .sr,
+body.theme-minimal .highlight .se{
+  color: #0f766e !important;
+}
+body.theme-minimal .highlight .c,
+body.theme-minimal .highlight .c1,
+body.theme-minimal .highlight .cm{
+  color: #64748b !important;
+  font-style: italic;
+}
+body.theme-minimal .highlight .m,
+body.theme-minimal .highlight .mi,
+body.theme-minimal .highlight .mf,
+body.theme-minimal .highlight .mh{
+  color: #7c3aed !important;
+}
+
+/* Editorify + CodeMirror (darcula is dark; override for minimal) */
+body.theme-minimal .editorify-wrap{
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+body.theme-minimal .editorify-toolbar{
+  background: rgba(255,255,255,0.92) !important;
+  border-bottom-color: var(--border) !important;
+}
+body.theme-minimal .editorify-btn{
+  color: var(--text) !important;
+  background: rgba(255,255,255,0.92) !important;
+  border-color: var(--border) !important;
+}
+body.theme-minimal .editorify-btn:hover{
+  background: rgba(255,255,255,1) !important;
+}
+
+body.theme-minimal .CodeMirror,
+body.theme-minimal .CodeMirror-scroll{
+  background: rgba(255,255,255,0.98) !important;
+  color: var(--text) !important;
+}
+body.theme-minimal .CodeMirror-gutters{
+  background: rgba(255,255,255,0.98) !important;
+  border-right: 1px solid var(--border) !important;
+}
+body.theme-minimal .CodeMirror-linenumber{
+  color: var(--muted) !important;
+}
+body.theme-minimal .CodeMirror-cursor{
+  border-left: 2px solid var(--text) !important;
+}
+body.theme-minimal .CodeMirror-selected{
+  background: rgba(15, 23, 42, 0.10) !important;
+}
+
+/* Unclassed form widgets used in some pages */
+body.theme-minimal button:not(.button){
+  font: inherit;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.92);
+  color: var(--text);
+  cursor: pointer;
+}
+body.theme-minimal button:not(.button):hover{ background: rgba(255,255,255,1); }
+body.theme-minimal input[type="text"],
+body.theme-minimal input[type="number"],
+body.theme-minimal textarea,
+body.theme-minimal select{
+  font: inherit;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.92);
+  color: var(--text);
+}
+body.theme-minimal textarea{ line-height: 1.5; }

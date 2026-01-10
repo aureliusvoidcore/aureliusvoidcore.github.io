@@ -1,17 +1,26 @@
 title: Aurelius Voidcore
-description: A site for Markdown-based blogging
+description: "A practical computer science lab: hardware, architecture, software, and formal methods"
 baseurl: ""
 url: "https://aureliusvoidcore.github.io"
 permalink: /:title/
 markdown: kramdown
 highlighter: rouge
+
+# Keep Jekyll builds fast by excluding large dev/build directories.
+exclude:
+  - node_modules
+  - vendor
+  - _site
+  - CVC5.md
+  - LLM.md
+  - README.md
+  - SPEC.md
+  - hw-cbmc
+  - surfer_repo
+  - chisel/
+  - chisel_forge/node_modules
+  - chisel_forge/server/node_modules
+  - chisel_forge/chisel
 collections:
   posts:
-    output: true
-    permalink: /blog/:year/:month/:day/:title
-defaults:
-  - scope:
-      path: ""
-      type: "posts"
-    values:
-      layout: "post"
+    output: false

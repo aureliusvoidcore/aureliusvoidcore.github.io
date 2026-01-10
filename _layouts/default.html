@@ -9,7 +9,7 @@
   <meta property="og:description" content="{{ page.excerpt | default: site.description | strip_newlines | escape }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
-  <link rel="icon" href="{{ site.baseurl }}/assets/favicon.ico">
+  <link rel="icon" href="{{ site.baseurl }}/assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -33,125 +33,136 @@
         <a href="{{ site.baseurl }}/pages/fpga" class="nav-link">FPGA</a>
         <a href="{{ site.baseurl }}/pages/systemc" class="nav-link">SystemC</a>
         <a href="{{ site.baseurl }}/pages/mathematics" class="nav-link">Mathematics</a>
-        <a href="{{ site.baseurl }}/blog" class="nav-link">Blog</a>
       </nav>
     </div>
   </header>
-  <!-- Theme Manager restored -->
-  <aside class="control-panel" aria-label="Control Panel">
-    <div class="cp-header">Theme Manager</div>
-    <div class="control-tabs" role="tablist" aria-label="Theme Manager Categories">
-      <button class="tab-button" role="tab" aria-selected="true" data-tab="themes">Themes</button>
-      <button class="tab-button" role="tab" aria-selected="false" data-tab="colors">Colors</button>
-      <button class="tab-button" role="tab" aria-selected="false" data-tab="effects">Effects</button>
-      <button class="tab-button" role="tab" aria-selected="false" data-tab="animations">Animations</button>
-      <button class="tab-button" role="tab" aria-selected="false" data-tab="presets">Presets</button>
-    </div>
-    <!-- Themes -->
-    <section class="cp-section tab-pane" data-tab-panel="themes" role="tabpanel">
-      <label for="cp-theme">Theme</label>
-      <select id="cp-theme" class="cp-select">
-        <option value="alien-xmas" selected>Alien Xmas (default)</option>
-        <option value="neon">Neon Cyberpunk</option>
-        <option value="matrix">Anime Matrix</option>
-        <option value="rainbow">Rainbow Sweep</option>
-        <option value="laser">Laser Beam</option>
-        <option value="amber">Amber Terminal</option>
-        <option value="synthwave">Synthwave</option>
-        <option value="rog">ROG Crimson</option>
-        <option value="win98">Windows 98</option>
-        <option value="amiga">Amiga Workbench</option>
-        <option value="mac">Macintosh Classic</option>
-      </select>
-    </section>
-    <!-- Colors -->
-    <section class="cp-section tab-pane is-hidden" data-tab-panel="colors" role="tabpanel" aria-hidden="true">
-      <div class="cp-row"><label for="cp-accent1">Primary</label><input id="cp-accent1" type="color" value="#00ffff" /></div>
-      <div class="cp-row"><label for="cp-accent2">Secondary</label><input id="cp-accent2" type="color" value="#00ff88" /></div>
-      <div class="cp-row"><label for="cp-accent3">Accent</label><input id="cp-accent3" type="color" value="#ff00ff" /></div>
-    </section>
-    <!-- Effects -->
-    <section class="cp-section tab-pane is-hidden" data-tab-panel="effects" role="tabpanel" aria-hidden="true">
-      <div class="cp-row">
-        <label class="cp-toggle-label" for="cp-lights">Lights</label>
-        <button id="cp-lights" class="toggle" aria-pressed="false" title="Toggle lights">
-          <span class="toggle-knob" aria-hidden="true"></span>
-          <span class="toggle-label-off">Off</span>
-          <span class="toggle-label-on">On</span>
-        </button>
-      </div>
-      <div class="cp-row"><label for="cp-grid">Grid Size</label><input id="cp-grid" type="range" min="16" max="80" step="4" value="40" /></div>
-      <div class="cp-row"><label for="cp-scan">Scanlines</label><input id="cp-scan" type="checkbox" checked /></div>
-      <div class="cp-row"><label for="cp-bg-color">Background</label><input id="cp-bg-color" type="color" value="#05060a" /></div>
-      <div class="cp-row"><label for="cp-bg-brightness">Brightness</label><input id="cp-bg-brightness" type="range" min="0" max="70" step="1" value="0" /></div>
-    </section>
-    <!-- Animations -->
-    <section class="cp-section tab-pane is-hidden" data-tab-panel="animations" role="tabpanel" aria-hidden="true">
-      <div id="cp-section-laser"><label for="cp-laser-mode">Laser Mode</label>
-        <select id="cp-laser-mode" class="cp-select">
-          <option value="sweep">Sweep</option>
-          <option value="sine">Sine</option>
-          <option value="square">Square</option>
-          <option value="triangle">Triangle</option>
-          <option value="saw">Sawtooth</option>
-          <option value="lissajous">Lissajous</option>
-          <option value="qam">QAM Constellation</option>
-          <option value="eye">Eye Diagram</option>
-          <option value="fft">FFT Bars</option>
-        </select>
-      </div>
-      <div id="cp-section-rainbow" class="cp-row">
-        <label for="cp-rainbow-speed">Rainbow Speed</label>
-        <input id="cp-rainbow-speed" type="range" min="0.2" max="3" step="0.1" value="1.0" />
-      </div>
-      <div id="cp-section-doom" class="cp-group">
-        <div class="cp-row">
-          <label for="cp-doom-intensity">Doom Intensity</label>
-          <select id="cp-doom-intensity" class="cp-select">
-            <option value="normal">Normal</option>
-            <option value="ultra">Ultra-Violence</option>
-          </select>
-        </div>
-        <div class="cp-row">
-          <label for="cp-doom-volume">Master Volume</label>
-          <input id="cp-doom-volume" type="range" min="0" max="1" step="0.01" value="0.5" />
-        </div>
-        <div class="cp-row">
-          <label for="cp-doom-reduced">Reduced Motion</label>
-          <input id="cp-doom-reduced" type="checkbox" />
-        </div>
-      </div>
-    </section>
-    <!-- Presets -->
-    <section class="cp-section tab-pane is-hidden" data-tab-panel="presets" role="tabpanel" aria-hidden="true">
-      <div class="cp-row"><button id="cp-preset-blue" class="button">Blue/Green</button><button id="cp-preset-violet" class="button">Violet/Pink</button></div>
-      <div class="cp-row"><button id="cp-preset-miami" class="button">Miami</button><button id="cp-preset-alien" class="button">Alien</button></div>
-      <div class="cp-row"><button id="cp-preset-amber" class="button">Amber</button><button id="cp-preset-synth" class="button">Synth</button></div>
-      <div class="cp-row"><button id="cp-preset-rog" class="button">ROG</button><button id="cp-preset-tealpurple" class="button">Teal/Purple</button></div>
-      <div class="cp-row"><button id="cp-preset-alien-xmas" class="button">Alien Xmas</button><button id="cp-reset" class="button">Reset</button></div>
-    </section>
-  </aside>
   <!-- Content Warning Gate for Doom theme -->
   <div id="doom-gate" class="doom-gate is-hidden" role="dialog" aria-modal="true" aria-labelledby="doom-gate-title" aria-describedby="doom-gate-desc">
     <div class="doom-gate__backdrop" aria-hidden="true"></div>
     <div class="doom-gate__panel">
-      <h2 id="doom-gate-title">Intense Visuals and Audio</h2>
-      <p id="doom-gate-desc">The Doom Classic theme contains heavy motion, flashing lights, disturbing imagery, and low-frequency audio. Choose how you want to proceed.</p>
+      <h2 id="doom-gate-title">High Motion and Audio Effects</h2>
+      <p id="doom-gate-desc">This theme may include rapid motion, flashing effects, and low-frequency audio. Choose how you want to proceed.</p>
       <div class="doom-gate__actions">
-        <button id="doom-gate-ultra" class="button">Enable Ultra-Violence</button>
-        <button id="doom-gate-reduced" class="button">Play with Reduced Effects</button>
-        <button id="doom-gate-dismiss" class="button button-secondary">No thanks</button>
+        <button id="doom-gate-ultra" class="button">Enable High Effects</button>
+        <button id="doom-gate-reduced" class="button">Enable Reduced Effects</button>
+        <button id="doom-gate-dismiss" class="button button-secondary">Cancel</button>
       </div>
-      <p class="doom-gate__note">Your choice will be remembered. You can tweak intensity later in the Theme Manager.</p>
+      <p class="doom-gate__note">Your choice will be remembered. You can adjust effects later in the Appearance panel.</p>
     </div>
   </div>
   <canvas id="matrix-canvas" class="matrix-canvas" aria-hidden="true"></canvas>
   <canvas id="doom-canvas" class="doom-canvas" aria-hidden="true"></canvas>
   <canvas id="laser-canvas" class="laser-canvas" aria-hidden="true"></canvas>
   <canvas id="alien-snow-canvas" class="alien-snow-canvas" aria-hidden="true"></canvas>
-  <main class="container">
-    {{ content }}
-  </main>
+
+  <div class="page-grid container">
+    <main class="page-main">
+      {{ content }}
+    </main>
+
+    <!-- Appearance controls -->
+    {% unless page.hide_controls %}
+    <aside class="control-panel" aria-label="Control Panel">
+      <div class="cp-header">
+        <span>Appearance</span>
+        <button id="cp-collapse" class="cp-collapse" type="button" aria-controls="cp-body" aria-expanded="true">Minimize</button>
+      </div>
+      <div id="cp-body" class="cp-body">
+        <div class="control-tabs" role="tablist" aria-label="Appearance Categories">
+          <button id="cp-tab-themes" class="tab-button" role="tab" aria-selected="true" aria-controls="cp-panel-themes" data-tab="themes">Theme</button>
+          <button id="cp-tab-colors" class="tab-button" role="tab" aria-selected="false" aria-controls="cp-panel-colors" data-tab="colors">Colors</button>
+          <button id="cp-tab-effects" class="tab-button" role="tab" aria-selected="false" aria-controls="cp-panel-effects" data-tab="effects">Effects</button>
+          <button id="cp-tab-animations" class="tab-button" role="tab" aria-selected="false" aria-controls="cp-panel-animations" data-tab="animations">Animations</button>
+          <button id="cp-tab-presets" class="tab-button" role="tab" aria-selected="false" aria-controls="cp-panel-presets" data-tab="presets">Presets</button>
+        </div>
+        <!-- Themes -->
+        <section id="cp-panel-themes" class="cp-section tab-pane" data-tab-panel="themes" role="tabpanel" aria-labelledby="cp-tab-themes" aria-hidden="false">
+          <label for="cp-theme">Theme</label>
+          <select id="cp-theme" class="cp-select">
+            <option value="minimal" selected>Default (Minimal)</option>
+            <option value="alien-xmas">Alien Xmas</option>
+            <option value="neon">Neon</option>
+            <option value="matrix">Matrix</option>
+            <option value="rainbow">Spectrum</option>
+            <option value="laser">Laser</option>
+            <option value="amber">Amber Terminal</option>
+            <option value="synthwave">Synth</option>
+            <option value="rog">ROG Crimson</option>
+            <option value="win98">Windows 98</option>
+            <option value="amiga">Amiga Workbench</option>
+            <option value="mac">Macintosh Classic</option>
+          </select>
+        </section>
+        <!-- Colors -->
+        <section id="cp-panel-colors" class="cp-section tab-pane is-hidden" data-tab-panel="colors" role="tabpanel" aria-labelledby="cp-tab-colors" aria-hidden="true">
+          <div class="cp-row"><label for="cp-accent1">Primary</label><input id="cp-accent1" type="color" value="#00ffff" /></div>
+          <div class="cp-row"><label for="cp-accent2">Secondary</label><input id="cp-accent2" type="color" value="#00ff88" /></div>
+          <div class="cp-row"><label for="cp-accent3">Accent</label><input id="cp-accent3" type="color" value="#ff00ff" /></div>
+        </section>
+        <!-- Effects -->
+        <section id="cp-panel-effects" class="cp-section tab-pane is-hidden" data-tab-panel="effects" role="tabpanel" aria-labelledby="cp-tab-effects" aria-hidden="true">
+          <div class="cp-row">
+            <label class="cp-toggle-label" for="cp-lights">Lights</label>
+            <button id="cp-lights" class="toggle" aria-pressed="false" title="Toggle lights">
+              <span class="toggle-knob" aria-hidden="true"></span>
+              <span class="toggle-label-off">Off</span>
+              <span class="toggle-label-on">On</span>
+            </button>
+          </div>
+          <div class="cp-row"><label for="cp-grid">Grid Size</label><input id="cp-grid" type="range" min="16" max="80" step="4" value="40" /></div>
+          <div class="cp-row"><label for="cp-scan">Scanlines</label><input id="cp-scan" type="checkbox" checked /></div>
+          <div class="cp-row"><label for="cp-bg-color">Background</label><input id="cp-bg-color" type="color" value="#05060a" /></div>
+          <div class="cp-row"><label for="cp-bg-brightness">Brightness</label><input id="cp-bg-brightness" type="range" min="0" max="70" step="1" value="0" /></div>
+        </section>
+        <!-- Animations -->
+        <section id="cp-panel-animations" class="cp-section tab-pane is-hidden" data-tab-panel="animations" role="tabpanel" aria-labelledby="cp-tab-animations" aria-hidden="true">
+          <div id="cp-section-laser"><label for="cp-laser-mode">Laser Mode</label>
+            <select id="cp-laser-mode" class="cp-select">
+              <option value="sweep">Sweep</option>
+              <option value="sine">Sine</option>
+              <option value="square">Square</option>
+              <option value="triangle">Triangle</option>
+              <option value="saw">Sawtooth</option>
+              <option value="lissajous">Lissajous</option>
+              <option value="qam">QAM Constellation</option>
+              <option value="eye">Eye Diagram</option>
+              <option value="fft">FFT Bars</option>
+            </select>
+          </div>
+          <div id="cp-section-rainbow" class="cp-row">
+            <label for="cp-rainbow-speed">Rainbow Speed</label>
+            <input id="cp-rainbow-speed" type="range" min="0.2" max="3" step="0.1" value="1.0" />
+          </div>
+          <div id="cp-section-doom" class="cp-group">
+            <div class="cp-row">
+              <label for="cp-doom-intensity">Effects Level</label>
+              <select id="cp-doom-intensity" class="cp-select">
+                <option value="normal">Normal</option>
+                <option value="ultra">High</option>
+              </select>
+            </div>
+            <div class="cp-row">
+              <label for="cp-doom-volume">Master Volume</label>
+              <input id="cp-doom-volume" type="range" min="0" max="1" step="0.01" value="0.5" />
+            </div>
+            <div class="cp-row">
+              <label for="cp-doom-reduced">Reduced Motion</label>
+              <input id="cp-doom-reduced" type="checkbox" />
+            </div>
+          </div>
+        </section>
+        <!-- Presets -->
+        <section id="cp-panel-presets" class="cp-section tab-pane is-hidden" data-tab-panel="presets" role="tabpanel" aria-labelledby="cp-tab-presets" aria-hidden="true">
+          <div class="cp-row"><button id="cp-preset-blue" class="button">Blue/Green</button><button id="cp-preset-violet" class="button">Violet/Pink</button></div>
+          <div class="cp-row"><button id="cp-preset-miami" class="button">High Contrast</button><button id="cp-preset-alien" class="button">Default</button></div>
+          <div class="cp-row"><button id="cp-preset-amber" class="button">Amber</button><button id="cp-preset-synth" class="button">Synth</button></div>
+          <div class="cp-row"><button id="cp-preset-rog" class="button">ROG</button><button id="cp-preset-tealpurple" class="button">Teal/Purple</button></div>
+          <div class="cp-row"><button id="cp-preset-alien-xmas" class="button">Preset A</button><button id="cp-reset" class="button">Reset</button></div>
+        </section>
+      </div>
+    </aside>
+    {% endunless %}
+  </div>
   <footer class="site-footer">
     <div class="container">
       <p>&copy; {{ site.time | date: "%Y" }} — {{ site.title }}</p>
@@ -164,6 +175,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/verilog/verilog.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/scheme/scheme.min.js"></script>
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/editorify.css?v={{ site.time | date: '%s' }}">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/minimal_overrides.css?v={{ site.time | date: '%s' }}">
   <script src="{{ site.baseurl }}/assets/js/editorify.js?v={{ site.time | date: '%s' }}"></script>
   <script src="{{ site.baseurl }}/assets/js/main.js?v={{ site.time | date: '%s' }}"></script>
 </body>

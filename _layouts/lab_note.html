@@ -1,0 +1,29 @@
+---
+layout: default
+---
+
+<article class="card">
+  <h2>{{ page.title }}</h2>
+  <p class="meta">
+    {% if page.date %}{{ page.date | date: "%Y-%m-%d" }}{% endif %}
+    {% if page.status %} · Status: {{ page.status }}{% endif %}
+    {% if page.tools %} · Tools: {{ page.tools }}{% endif %}
+    {% if page.tags %} · Tags: {{ page.tags | join: ", " }}{% endif %}
+  </p>
+
+  {% if page.question %}
+    <h3>Question</h3>
+    <p>{{ page.question }}</p>
+  {% endif %}
+
+  {{ content }}
+
+  {% if page.next_steps %}
+    <h3>Next steps</h3>
+    <ul>
+      {% for s in page.next_steps %}
+        <li>{{ s }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</article>

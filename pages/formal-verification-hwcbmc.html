@@ -7,7 +7,7 @@ permalink: /pages/formal-verification/hwcbmc
 <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/cvc5.css">
 
 <h2>HW-CBMC / EBMC – Browser Model Checking</h2>
-<p class="meta">Run EBMC (Enhanced Bounded Model Checking) on Verilog/VHDL directly in your browser using a WebAssembly build of hw-cbmc.</p>
+	<p class="meta">Run EBMC (hw-cbmc) on Verilog/SystemVerilog/VHDL directly in your browser using a WebAssembly build.</p>
 
 <div class="cvc5-wrap">
 	<div class="cvc5-col">
@@ -19,6 +19,7 @@ permalink: /pages/formal-verification/hwcbmc
 				</label>
 				<span id="hwcbmc-file-name" class="cvc5-status"></span>
 				<button id="hwcbmc-load-example" class="button" title="Load a small SystemVerilog example into the editor">Load example</button>
+				<button id="hwcbmc-quick-test" class="button" title="Run EBMC on the built-in shift-register example using SystemVerilog and reset ~rstn">Quick test (sr.sv)</button>
 			</div>
 			<!-- Use the site-wide editorify/CodeMirror editor instead of a bespoke textarea -->
 			<pre><code class="language-verilog" aria-label="HDL editor" data-editor="main">
@@ -260,7 +261,6 @@ permalink: /pages/formal-verification/hwcbmc
 			<div class="cvc5-row">
 				<button id="hwcbmc-run" class="button button-primary">Run EBMC</button>
 				<button id="hwcbmc-show-help" class="button">Show CLI help</button>
-				<button id="hwcbmc-quick-test" class="button" title="Run EBMC on the built-in shift-register example using SystemVerilog and reset ~rstn">Quick test (sr.sv)</button>
 			</div>
 		</div>
 		

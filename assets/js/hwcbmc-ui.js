@@ -5,6 +5,22 @@
 	let logBuffer = '';
 	let outBuffer = '';
 
+	function reportFatal(prefix, err) {
+		try {
+			const msg = (err && (err.stack || err.message)) ? (err.stack || err.message) : String(err);
+			log(prefix + msg);
+			setStatus(prefix.replace(/: $/, '') + ' (see Console)');
+		} catch { /* ignore */ }
+	}
+
+	// Surface unexpected failures directly in the page.
+	window.addEventListener('error', (e) => {
+		reportFatal('FATAL: ', e?.error || e?.message || e);
+	});
+	window.addEventListener('unhandledrejection', (e) => {
+		reportFatal('PROMISE REJECTED: ', e?.reason || e);
+	});
+
 	function getEditorCM() {
 		// Prefer the site-wide editor from editorify (CodeMirror instance)
 		const cmHost = document.querySelector('.editorify-wrap .CodeMirror');
@@ -107,9 +123,26 @@
 	}
 
 	function inferExtFromContentOrName(name) {
-		if (name && /\.(v|sv|svh)$/i.test(name)) return 'v';
+		if (name && /\.(sv|svh)$/i.test(name)) return 'sv';
+		if (name && /\.v$/i.test(name)) return 'v';
 		if (name && /\.(vhd|vhdl)$/i.test(name)) return 'vhd';
 		return 'v';
+	}
+
+	function baseName(pathLike) {
+		try {
+			const s = String(pathLike || '').trim();
+			if (!s) return '';
+			return s.split(/[\\/]/).pop();
+		} catch {
+			return '';
+		}
+	}
+
+	function maybeAutoEnableSystemVerilog(nameHint) {
+		const sv = !!(nameHint && /\.(sv|svh)$/i.test(nameHint));
+		const el = document.getElementById('hwcbmc-systemverilog');
+		if (el && sv) el.checked = true;
 	}
 
 	function collectCLIArgs(designFile) {
@@ -293,8 +326,9 @@
 			throw new Error('No design source provided. Paste code or upload a file.');
 		}
 
-		const ext = inferExtFromContentOrName(fileNameHint);
-		const fname = ext === 'vhd' ? 'design.vhd' : 'design.v';
+		const hinted = baseName(fileNameHint);
+		const ext = inferExtFromContentOrName(hinted);
+		const fname = hinted || (ext === 'vhd' ? 'design.vhd' : (ext === 'sv' ? 'design.sv' : 'design.v'));
 		wrapper.writeFile(fname, src);
 		return fname;
 	}
@@ -308,6 +342,7 @@
 
 		const fileLabel = document.getElementById('hwcbmc-file-name');
 		const nameHint = fileLabel && fileLabel.dataset?.filename;
+		maybeAutoEnableSystemVerilog(nameHint);
 
 		let designFile;
 		try {
@@ -357,6 +392,7 @@
 			upload.addEventListener('change', (e) => {
 				const file = e.target.files[0];
 				if (!file) return;
+				maybeAutoEnableSystemVerilog(file.name);
 				const reader = new FileReader();
 				reader.onload = (ev) => {
 					const text = ev.target.result;
@@ -398,10 +434,11 @@
 						fileLabel.textContent = 'Loaded example: sr.sv';
 						fileLabel.dataset.filename = 'sr.sv';
 					}
+					maybeAutoEnableSystemVerilog('sr.sv');
 					log('Loaded example design for quick test: sr.sv');
 				}
 				// Write the current editor content into a consistent filename used by the command
-				const designPath = 'design.v';
+				const designPath = 'sr.sv';
 				wrapper.writeFile(designPath, src);
 				const argv = ['--systemverilog', designPath, '--reset', '~rstn'];
 				log('> ebmc ' + argv.join(' '));
@@ -446,6 +483,7 @@
 					fileLabel.textContent = 'Loaded example: sr.sv';
 					fileLabel.dataset.filename = 'sr.sv';
 				}
+				maybeAutoEnableSystemVerilog('sr.sv');
 				log('Loaded example design: sr.sv');
 			} catch (e) {
 				log('ERROR loading example: ' + e.message);

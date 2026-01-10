@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ABC WebAssembly - FPGA Synthesis & Verification</title>
+    <link rel="stylesheet" href="../assets/css/theme_vars.css">
+    <script src="../assets/js/theme_bridge.js" defer></script>
     <style>
         * {
             margin: 0;
@@ -221,9 +223,41 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Theme bridge: make the standalone page match site theme (Minimal) */
+        html.theme-minimal body {
+            background: var(--bg) !important;
+            color: var(--text) !important;
+        }
+        html.theme-minimal .container {
+            background: rgba(255,255,255,0.92) !important;
+            box-shadow: none !important;
+            border: 1px solid var(--border) !important;
+        }
+        html.theme-minimal header {
+            background: transparent !important;
+            color: var(--text) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        html.theme-minimal .panel {
+            background: rgba(255,255,255,0.92) !important;
+            border-color: var(--border) !important;
+        }
+        html.theme-minimal .panel h2 {
+            color: var(--text) !important;
+        }
+        html.theme-minimal .command-item {
+            background: rgba(255,255,255,0.92) !important;
+            border-color: var(--border) !important;
+        }
+        html.theme-minimal .command-item:hover {
+            background: rgba(255,255,255,1) !important;
+            color: var(--text) !important;
+            transform: none !important;
+        }
     </style>
 </head>
-<body>
+<body class="theme-minimal">
     <div class="container">
         <header>
             <h1>🔧 ABC WebAssembly</h1>

@@ -1,0 +1,47 @@
+/* Shared theme variables for standalone apps.
+   Intentionally minimal: provides CSS variables + a light default body surface.
+*/
+
+:root{
+  --bg-base: #fbfcfe;
+  --bg-lighten: 0%;
+  --bg: var(--bg-base);
+  --text: #0b1220;
+  --muted: #334155;
+  --border: rgba(2, 6, 23, 0.12);
+  --panel-bg: rgba(255,255,255,0.92);
+  --neon-blue: #0b1220;
+  --neon-green: #0b1220;
+  --neon-pink: #334155;
+}
+
+@supports (color: color-mix(in srgb, black 50%, white 50%)){
+  :root{
+    --bg: color-mix(in srgb, var(--bg-base) calc(100% - var(--bg-lighten)), white var(--bg-lighten));
+  }
+}
+
+/* Apply theme class on either <html> or <body> */
+:root.theme-minimal,
+body.theme-minimal{
+  color-scheme: light;
+  --bg-base: #fbfcfe;
+  --bg-lighten: 0%;
+  --text: #0b1220;
+  --muted: #334155;
+  --border: rgba(2, 6, 23, 0.12);
+  --panel-bg: rgba(255,255,255,0.92);
+  --neon-blue: #0b1220;
+  --neon-green: #0b1220;
+  --neon-pink: #334155;
+}
+
+/* Sensible defaults for pages that don't bring their own shell styling */
+body{
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* If the CRT background class exists, keep it off for minimal */
+:root.theme-minimal .scanlines,
+body.theme-minimal .scanlines{ display:none; }

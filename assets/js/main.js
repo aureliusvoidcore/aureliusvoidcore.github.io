@@ -2,7 +2,104 @@
   const doc = document;
   const body = doc.body;
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  
+
+  // Viewport + device detection (no UA sniffing)
+  function getViewportSize(){
+    const vv = window.visualViewport;
+    const w = vv ? vv.width : window.innerWidth;
+    const h = vv ? vv.height : window.innerHeight;
+    return { w: Math.round(w), h: Math.round(h) };
+  }
+  function getBreakpoint(width){
+    if (width <= 480) return 'xs';
+    if (width <= 768) return 'sm';
+    if (width <= 1024) return 'md';
+    return 'lg';
+  }
+  function isTouchLike(){
+    try{
+      if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+      if (navigator && typeof navigator.maxTouchPoints === 'number' && navigator.maxTouchPoints > 0) return true;
+    } catch {}
+    return false;
+  }
+
+  let vpRAF = 0;
+  function applyViewport(){
+    const { w, h } = getViewportSize();
+    const bp = getBreakpoint(w);
+    doc.documentElement.style.setProperty('--viewport-w', w + 'px');
+    doc.documentElement.style.setProperty('--viewport-h', h + 'px');
+    // Mobile address bar safe-ish unit: 100 * var(--vh)
+    doc.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
+
+    body.dataset.viewport = bp;
+    body.classList.toggle('vp-xs', bp === 'xs');
+    body.classList.toggle('vp-sm', bp === 'sm');
+    body.classList.toggle('vp-md', bp === 'md');
+    body.classList.toggle('vp-lg', bp === 'lg');
+  }
+  function scheduleViewport(){
+    if (vpRAF) return;
+    vpRAF = window.requestAnimationFrame(() => { vpRAF = 0; applyViewport(); });
+  }
+
+  body.classList.toggle('device-touch', isTouchLike());
+  body.classList.toggle('device-fine', !isTouchLike());
+  applyViewport();
+  window.addEventListener('resize', scheduleViewport);
+  window.addEventListener('orientationchange', scheduleViewport);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scheduleViewport);
+    window.visualViewport.addEventListener('scroll', scheduleViewport);
+  }
+
+  // Control panel collapse (persisted)
+  const CP_COLLAPSE_KEY = 'cp-collapsed-v1';
+  function setCollapsed(collapsed){
+    const panel = doc.querySelector('.control-panel');
+    if (!panel) return;
+    panel.classList.toggle('is-collapsed', !!collapsed);
+    body.classList.toggle('cp-collapsed', !!collapsed);
+    const btn = doc.getElementById('cp-collapse');
+    if (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      btn.textContent = collapsed ? 'Expand' : 'Minimize';
+    }
+  }
+  function loadCollapsed(){
+    try{
+      const v = localStorage.getItem(CP_COLLAPSE_KEY);
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+      return null;
+    }catch{ return null; }
+  }
+  function saveCollapsed(collapsed){
+    try{ localStorage.setItem(CP_COLLAPSE_KEY, String(!!collapsed)); }catch{}
+  }
+  (function initCollapse(){
+    const panel = doc.querySelector('.control-panel');
+    if (!panel) return;
+    const saved = loadCollapsed();
+    const isNarrow = window.matchMedia('(max-width: 900px)').matches;
+    const initial = (saved === null) ? isNarrow : saved;
+    setCollapsed(initial);
+    const btn = doc.getElementById('cp-collapse');
+    if (btn) {
+      btn.addEventListener('click', function(){
+        const next = !panel.classList.contains('is-collapsed');
+        setCollapsed(next);
+        saveCollapsed(next);
+      });
+    }
+    window.addEventListener('resize', function(){
+      // If user has an explicit preference, don't auto-toggle.
+      if (loadCollapsed() !== null) return;
+      setCollapsed(window.matchMedia('(max-width: 900px)').matches);
+    });
+  })();
+
   // Runtime tunables
   let laserMode = 'sweep';
   let rainbowSpeed = 1.0; // multiplier for rainbow hue rotation
@@ -56,11 +153,12 @@
     tabs: Array.from(doc.querySelectorAll('.tab-button')),
     panes: Array.from(doc.querySelectorAll('.tab-pane')),
   };
-  const STORE = 'cp-state-v1';
-  const TAB_STORE = 'cp-tab-v1';
+  // Bump version to avoid older saved states overriding new defaults
+  const STORE = 'cp-state-v2';
+  const TAB_STORE = 'cp-tab-v2';
   function detectTheme(){
     for (const c of body.classList) if (c.startsWith('theme-')) return c.slice(6);
-    return 'alien-xmas';
+    return 'minimal';
   }
   function state(){
     return {
@@ -84,9 +182,13 @@
   function setVar(name, val){ doc.documentElement.style.setProperty(name, val); }
   function getVar(name){ return getComputedStyle(doc.documentElement).getPropertyValue(name).trim(); }
   function applyTheme(theme){
-    const classes = ['theme-alien-xmas','theme-neon','theme-matrix','theme-rainbow','theme-laser','theme-amber','theme-synthwave','theme-rog','theme-win98','theme-amiga','theme-mac','theme-doom'];
+    const classes = ['theme-minimal','theme-alien-xmas','theme-neon','theme-matrix','theme-rainbow','theme-laser','theme-amber','theme-synthwave','theme-rog','theme-win98','theme-amiga','theme-mac','theme-doom'];
     for(const c of classes) body.classList.remove(c);
     body.classList.add('theme-' + (theme || 'neon'));
+
+    // CRT grid background is part of the cyber aesthetic; disable it for Minimal.
+    if ((theme || 'neon') === 'minimal') body.classList.remove('crt-bg');
+    else body.classList.add('crt-bg');
   }
   function setHidden(el, hidden){ if (!el) return; el.classList.toggle('is-hidden', !!hidden); }
   function updateCPVisibility(theme){
@@ -144,6 +246,13 @@
   // Ensure the Theme select includes Doom and label it as Doom Classic
   if (CP.theme) {
     const opts = Array.from(CP.theme.options || []);
+    let minimalOpt = opts.find(o => o.value === 'minimal');
+    if (!minimalOpt) {
+      minimalOpt = doc.createElement('option');
+      minimalOpt.value = 'minimal';
+      minimalOpt.textContent = 'Default (Minimal)';
+      CP.theme.insertBefore(minimalOpt, CP.theme.firstChild);
+    }
     let doomOpt = opts.find(o => o.value === 'doom');
     if (!doomOpt) {
       doomOpt = doc.createElement('option');
@@ -158,11 +267,11 @@
     doomOpt.textContent = 'Doom Classic';
   }
 
-  // Default to Alien / Cyberpunk Christmas theme
-  function defaultAlienXmasSettings(){
+  // Default to Minimal theme
+  function defaultMinimalSettings(){
     return { dInt: 'normal', dVol: 0.0, dReduced: true };
   }
-  const s0 = Object.assign({ theme: 'alien-xmas', a1:'#4ef3ff', a2:'#00ff88', a3:'#ff3366', grid:40, scan:true, laser:'sweep', rainbow:1.0, bg:'#02030a', bgl:4 }, defaultAlienXmasSettings(), load());
+  const s0 = Object.assign({ theme: 'minimal', a1:'#0f172a', a2:'#0f766e', a3:'#7c3aed', grid:40, scan:false, laser:'sweep', rainbow:1.0, bg:'#f8fafc', bgl:0 }, defaultMinimalSettings(), load());
   apply(s0);
   // Initialize Doom runtime from initial state
   try{

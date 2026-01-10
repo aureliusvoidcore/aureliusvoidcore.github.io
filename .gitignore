@@ -1,3 +1,19 @@
+# Local/editor
+.vscode/
+
+# Avoid accidental submodule metadata
+.gitmodules
+
+# Extra docs to keep local (not tracked)
+**/WEB_INTEGRATION.md
+**/COMPILING.md
+CVC5.md
+SPEC.md
+
+# Local modules (keep locally, don't track)
+chisel/
+# chisel_forge/
+surfer_repo/
 # Prerequisites
 *.d
 
@@ -58,5 +74,5 @@ node_modules/
 build_hwcbmc_wasm*.log
 build_cvc5_wasm*.log
 
-# Frontend source maps (avoid leaking debug info)
+# Frontend source maps
 cvc5_app/**/*.map

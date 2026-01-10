@@ -16,6 +16,11 @@ class HWCBMCWrapper {
 	async initialize(overrides = {}) {
 		if (this.ready) return;
 
+		// If a caller provides print/printErr, we still must capture into
+		// outputBuffer/errorBuffer for wrapper.execute() to work.
+		const userPrint = overrides.print;
+		const userPrintErr = overrides.printErr;
+
 		const baseConfig = {
 			print: (t) => {
 				console.log(t);
@@ -35,6 +40,18 @@ class HWCBMCWrapper {
 		};
 
 		const cfg = { ...baseConfig, ...overrides };
+		cfg.print = (t) => {
+			baseConfig.print(t);
+			if (typeof userPrint === 'function') {
+				try { userPrint(t); } catch (e) { /* ignore */ }
+			}
+		};
+		cfg.printErr = (t) => {
+			baseConfig.printErr(t);
+			if (typeof userPrintErr === 'function') {
+				try { userPrintErr(t); } catch (e) { /* ignore */ }
+			}
+		};
 
 		if (typeof HWCBMCModule === 'undefined') {
 			throw new Error('HWCBMCModule factory not found. Make sure hwcbmc.js is loaded.');

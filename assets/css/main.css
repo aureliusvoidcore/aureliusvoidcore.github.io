@@ -1,7 +1,8 @@
 :root {
   --bg-base: #05060a;
   --bg-lighten: 0%;
-  --bg: color-mix(in srgb, var(--bg-base) calc(100% - var(--bg-lighten)), white var(--bg-lighten));
+  /* Fallback for browsers without color-mix() */
+  --bg: var(--bg-base);
   --grid: rgba(0, 255, 255, 0.08);
   --grid-size: 40px;
   --neon-blue: #00ffff;
@@ -20,6 +21,12 @@
   --xmas-aurora-teal: #3bfffb;
   --xmas-aurora-violet: #c084fc;
   --xmas-aurora-lime: #b9ff66;
+}
+
+@supports (color: color-mix(in srgb, black 50%, white 50%)) {
+  :root {
+    --bg: color-mix(in srgb, var(--bg-base) calc(100% - var(--bg-lighten)), white var(--bg-lighten));
+  }
 }
 
 /* Mode variables */
@@ -74,6 +81,18 @@ body {
 body.scan-off .scanlines { display: none; }
 
 .container { max-width: 1100px; padding: 24px; margin: 0 auto; }
+
+@media (max-width: 600px) {
+  .container { padding: 14px; }
+}
+
+/* Main page layout: content + (optional) control panel */
+.page-grid{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.page-main{ min-width: 0; }
+
+@media (min-width: 1000px) {
+  .page-grid{ grid-template-columns: minmax(0, 1fr) 300px; }
+}
 
 .site-header, .site-footer { text-align: center; position: relative; z-index: 1; }
 
@@ -193,12 +212,36 @@ code { color: var(--neon-pink); }
 
 /* Control Panel */
 .control-panel{
-  position: fixed; right: 12px; top: 100px; width: 280px; z-index: 50;
+  position: relative;
+  width: 100%;
+  z-index: 50;
   border: 1px solid var(--border); border-radius: 12px; padding: 12px;
   background: rgba(0, 15, 18, 0.6); box-shadow: 0 0 40px rgba(0,255,255,0.08);
 }
 .cp-header{ font-family: 'Orbitron', sans-serif; color: var(--neon-blue); margin-bottom: 8px; }
-.cp-header{ position: relative; }
+.cp-header{ position: relative; display:flex; align-items:center; justify-content:space-between; gap: 10px; }
+.cp-collapse{
+  font: inherit;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0, 15, 18, 0.4);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.cp-collapse:hover{ transform: translateY(-1px); }
+.control-panel.is-collapsed .cp-body{ display:none; }
+.control-panel.is-collapsed{ overflow: visible; }
+
+@media (min-width: 1000px) {
+  .control-panel{
+    position: sticky;
+    top: 12px;
+    max-height: calc((var(--vh, 1vh) * 100) - 24px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 .cp-section{ margin-bottom: 10px; }
 .cp-row{ display:flex; align-items:center; justify-content:space-between; gap: 10px; margin: 6px 0; }
 .cp-toggle-label{ font-size: 12px; color: var(--muted); margin-right: 8px; }
@@ -244,6 +287,65 @@ body.theme-doom .doom-canvas{ display:block; }
 main { position: relative; z-index: 1; }
 
 /* Theme presets */
+/* Minimal: high readability, low distraction */
+body.theme-minimal{
+  --bg-base: #fbfcfe;
+  --bg-lighten: 0%;
+  --grid: rgba(0,0,0,0);
+  --neon-blue: #0b1220;
+  --neon-green: #0b1220;
+  --neon-pink: #334155;
+  --text: #0b1220;
+  --muted: #334155;
+  --border: rgba(2, 6, 23, 0.12);
+  --panel-bg: rgba(255,255,255,0.92);
+  --glow-text: none;
+  --glow-box: none;
+}
+
+body.theme-minimal{
+  background: var(--bg);
+  background-image: none;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.55;
+}
+
+/* Strip CRT/glitch effects for clarity */
+body.theme-minimal .scanlines{ display:none; }
+body.theme-minimal .glitch::before,
+body.theme-minimal .glitch::after{ content:none; }
+body.theme-minimal .blinking-cursor{ display:none; }
+
+body.theme-minimal h1,
+body.theme-minimal h2,
+body.theme-minimal h3,
+body.theme-minimal .site-title{
+  font-family: inherit;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+body.theme-minimal p,
+body.theme-minimal li{ text-shadow: none; }
+
+body.theme-minimal .nav-link,
+body.theme-minimal .card,
+body.theme-minimal .button{
+  background: rgba(255,255,255,0.92);
+  box-shadow: none;
+}
+body.theme-minimal .nav-link:hover,
+body.theme-minimal .nav-link:focus{
+  color: var(--text);
+  background: rgba(255,255,255,1);
+}
+body.theme-minimal .button:hover{ transform: none; }
+
+body.theme-minimal pre.highlight,
+body.theme-minimal pre code{
+  background: rgba(255,255,255,0.92);
+  box-shadow: none;
+}
+
 /* Default: Alien / Cyberpunk Christmas (strongly distinct) */
 @keyframes aurora-shift {
   0% { background-position: 50% 0%, 10% 0%, 90% 0%, 50% 100%; }
@@ -565,3 +667,13 @@ body.theme-mac .control-panel input[type="checkbox"]{ background:#efefef; border
 
 /* Utility */
 .is-hidden{ display: none !important; }
+
+/* Reading-focused pages: no Appearance panel, reduce paragraph glow */
+body:not(:has(.control-panel)) p,
+body:not(:has(.control-panel)) li {
+  text-shadow: 0 0 4px rgba(0,255,255,0.15);
+}
+body:not(:has(.control-panel)) article p,
+body:not(:has(.control-panel)) article li {
+  text-shadow: none;
+}
