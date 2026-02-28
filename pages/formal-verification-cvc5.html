@@ -9,29 +9,85 @@ permalink: /pages/formal-verification/cvc5
 <div class="page-content">
   <div class="lux-pre rev-blur">ENGINE TERMINAL</div>
   <h2 class="lux-h1 rev-blur" style="--lux-del: 0.1s;">CVC5 SOLVER</h2>
-
   <p class="rev-blur" style="--lux-del: 0.2s; color: #888; margin-bottom: 2rem;">Execute <b>SMT-LIB</b> and <b>SyGuS</b> constraints exclusively client-side via CVC5 WebAssembly targets. Bypasses external communication architectures completely. Telemetry active.</p>
-  
+
   <div class="cvc5-wrap rev-blur" style="--lux-del: 0.3s;">
-    <div class="cvc5-col">
-      <div class="cvc5-card">
-        <h3>Primary Console (SMT/SyGuS)</h3>
-        <textarea id="cvc5-input" class="cvc5-textarea" placeholder="// Enter assertions or objectives..."></textarea>
-        <div class="cvc5-actions" style="display:flex; gap:10px;">
-          <button id="cvc5-run" class="button"><span>INJECT QUERY</span></button>
-          <button id="cvc5-clear" class="button" style="background: transparent; color: var(--lux-crimson); border-color: var(--lux-crimson);"><span>PURGE</span></button>
-        </div>
+  <div class="cvc5-col">
+    <div class="cvc5-card">
+      <h3>Editor</h3>
+      <textarea id="cvc5-input" class="cvc5-textarea" placeholder="Enter SMT-LIB v2 or SyGuS v2 here..."></textarea>
+      <div class="cvc5-actions">
+        <button id="cvc5-run" class="button">Run</button>
+        <button id="cvc5-clear" class="button">Clear</button>
+        <label class="button" style="cursor:pointer;">
+          Upload<input id="cvc5-file" type="file" accept=".smt2,.sy,.txt" style="display:none;" />
+        </label>
+        <button id="cvc5-dl-out" class="button">Download Output</button>
+        <span id="cvc5-status" class="cvc5-status">Initializing...</span>
       </div>
     </div>
-    
-    <div class="cvc5-col">
-      <div class="cvc5-card">
-        <h3>Trace & Output</h3>
-        <pre id="cvc5-output" class="cvc5-pre"><code>[System] Initializing CVC5 engine...</code></pre>
-        <div class="cvc5-actions" style="justify-content: flex-end; margin-top:20px;">
-           <span id="cvc5-status" class="cvc5-status" style="color: var(--lux-cyber); border: 1px solid var(--lux-cyber); padding: 5px 10px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem;">OFFLINE</span>
-        </div>
+    <div class="cvc5-card">
+      <h3>Output</h3>
+      <pre id="cvc5-output" class="cvc5-pre"></pre>
+    </div>
+    <div class="cvc5-card">
+      <h3>Errors / Log</h3>
+      <pre id="cvc5-errors" class="cvc5-pre"></pre>
+    </div>
+  </div>
+  <div class="cvc5-col">
+    <div class="cvc5-card">
+      <h3>Options</h3>
+      <div class="cvc5-row"><label for="cvc5-lang">Language</label>
+        <select id="cvc5-lang" class="cp-select">
+          <option value="auto">Auto</option>
+          <option value="smtlib2.6">SMT-LIB v2.6</option>
+          <option value="sygus2">SyGuS v2</option>
+        </select>
       </div>
+      <div class="cvc5-row"><label for="cvc5-logic">Logic</label><input id="cvc5-logic" type="text" placeholder="e.g., QF_BV, ALL" /></div>
+      <div class="cvc5-row"><label for="cvc5-timeout">Timeout (ms)</label><input id="cvc5-timeout" type="number" min="0" step="100" value="0" /></div>
+      <div class="cvc5-row"><label for="cvc5-seed">Random Seed</label><input id="cvc5-seed" type="number" min="0" step="1" value="0" /></div>
+      <div class="cvc5-row"><label for="cvc5-bv-sat">BV SAT Solver</label>
+        <select id="cvc5-bv-sat" class="cp-select only-smt">
+          <option value="">Default</option>
+          <option value="cadical">CaDiCaL</option>
+          <option value="cryptominisat">CryptoMiniSat</option>
+        </select>
+      </div>
+      <div class="cvc5-row only-smt"><label></label>
+        <label><input id="cvc5-models" type="checkbox" /> Produce Models</label>
+        <label><input id="cvc5-unsat" type="checkbox" /> Unsat Cores</label>
+      </div>
+      <div class="cvc5-row only-smt"><label></label>
+        <label><input id="cvc5-incremental" type="checkbox" /> Incremental</label>
+        <label><input id="cvc5-strings-exp" type="checkbox" /> Strings Experimental</label>
+      </div>
+      <div class="cvc5-row"><label></label>
+        <label><input id="cvc5-verbose" type="checkbox" /> Verbose (show banner/logs)</label>
+      </div>
+      <div class="cvc5-row only-sygus"><label>SyGuS</label>
+        <label><input id="cvc5-sygus-enum" type="checkbox" /> Use enumerative solver</label>
+      </div>
+      <div class="cvc5-row"><label for="cvc5-extra">Extra Flags</label><input id="cvc5-extra" type="text" placeholder="Any additional CLI flags..." /></div>
+    </div>
+    <div class="cvc5-card">
+      <h3>Examples</h3>
+      <div class="cvc5-row">
+        <select id="cvc5-example" class="cp-select">
+          <option value="smt">SMT: QF_BV model</option>
+          <option value="sygus">SyGuS: invariant synthesis (inv-f)</option>
+          <option value="sr">SyGuS: shift register invariant (sr.sy)</option>
+        </select>
+        <button id="cvc5-load" class="button">Load</button>
+      </div>
+    </div>
+    <div class="cvc5-card">
+      <h3>Stats</h3>
+      <pre id="cvc5-stats" class="cvc5-pre"></pre>
     </div>
   </div>
 </div>
+</div> <!-- end page-content -->
+
+<script src="{{ site.baseurl }}/assets/js/cvc5-ui.js"></script>
