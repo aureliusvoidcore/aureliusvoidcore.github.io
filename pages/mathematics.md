@@ -1,18 +1,30 @@
 ---
 layout: default
-title: Mathematics
+title: Applied Mathematics
+permalink: /mathematics/
 ---
 
-## Mathematics
+<div class="page-content">
+  <div class="lux-pre rev-blur">ALGEBRAIC TOPOLOGY & CATEGORY THEORY</div>
+  <h2 class="lux-h1 rev-blur" style="--lux-del: 0.1s;">MATHEMATICS LAB</h2>
 
-This section is for the mathematics that shows up directly in model checking and hardware reasoning.
+  <div class="grid rev-blur" style="--lux-del: 0.2s;">
+    <div class="card">
+      <div class="lux-pre" style="font-size: 0.8rem; margin-bottom: 2rem; color: var(--lux-cyber);">COMPUTATIONAL SYMBOLICS</div>
+      <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.5rem; margin-bottom: 1rem;">Lean 4 Theorem Prover</h3>
+      <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.6;">
+        Formalized definitions and proofs constructed under Calculus of Inductive Constructions. Establishing guaranteed mathematical axioms.
+      </p>
+      <a href="#" class="button"><span>ACCESS PROOFS</span></a>
+    </div>
 
-### Used by the tools on this site
-<ul>
-	<li><b>Logic</b>: propositional logic, first-order theories, satisfiability.</li>
-	<li><b>Induction</b>: $k$-induction, invariants, fixpoints (the proof shape behind PDR/IC3).</li>
-	<li><b>Automata</b>: Büchi/liveness encodings (liveness-to-safety reductions).</li>
-	<li><b>Bit-vectors</b>: arithmetic over fixed-width words (the native language of SMT engines like CVC5).</li>
-</ul>
-
-<p class="meta">Grounded notes: only math that shows up directly in the tools and workflows on this site.</p>
+    <div class="card" style="border-color: rgba(203, 168, 101, 0.2);">
+      <div class="lux-pre" style="font-size: 0.8rem; margin-bottom: 2rem; color: var(--lux-gold);">NUMBER THEORY</div>
+      <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.5rem; margin-bottom: 1rem;">Elliptic Curve Sandbox</h3>
+      <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.6;">
+        Interactive demonstrations and simulations of zero-knowledge proof components relying on elliptic curve pairings and homomorphic encryption.
+      </p>
+      <a href="#" class="button" style="--button-color: var(--lux-gold);"><span>INITIALIZE SIM</span></a>
+    </div>
+  </div>
+</div>

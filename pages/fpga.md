@@ -1,23 +1,39 @@
 ---
 layout: default
-title: FPGA
+title: FPGA Tools
+permalink: /fpga/
 ---
 
-## FPGA
+<div class="page-content">
+  <div class="lux-pre rev-blur">HARDWARE SYNTHESIS</div>
+  <h2 class="lux-h1 rev-blur" style="--lux-del: 0.1s;">FPGA TOOLCHAIN</h2>
 
-FPGA work here focuses on implementation plus verification artifacts.
+  <div class="grid rev-blur" style="--lux-del: 0.2s;">
+    <div class="card">
+      <div class="lux-pre" style="font-size: 0.8rem; margin-bottom: 2rem; color: var(--lux-cyber);">VERILOG -> AIGER</div>
+      <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.5rem; margin-bottom: 1rem;">ABC WASM Wrapper</h3>
+      <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.6;">
+        Convert sequential and combinational logic architectures to AIG graphs completely in the client-side browser using the compiled Berkeley ABC pipeline.
+      </p>
+      <a href="{{ site.baseurl }}/fpga/abc" class="button"><span>INITIALIZE ENGINE</span></a>
+    </div>
 
-### What exists on this site (implemented)
-<p>
-  <a class="button" href="{{ site.baseurl }}/pages/fpga/abc">ABC WebAssembly Demo</a>
-  <span class="meta">Interactive ABC build for synthesis/commands in-browser.</span>
-</p>
+    <div class="card">
+      <div class="lux-pre" style="font-size: 0.8rem; margin-bottom: 2rem; color: var(--lux-gold);">CHISEL -> FIRRTL</div>
+      <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.5rem; margin-bottom: 1rem;">Chisel Forge</h3>
+      <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.6;">
+        Scala-based HDL server interface for hardware generators. Compiles object-oriented hardware constructs into low-level Verilog for deployment.
+      </p>
+      <a href="{{ site.baseurl }}/chisel_forge/" class="button" style="--button-color: var(--lux-gold);"><span>CONNECT TARGET</span></a>
+    </div>
 
-### Connections to model checking
-<ul>
-  <li><b>Before synthesis</b>: check RTL assertions and generate waveforms via <a href="{{ site.baseurl }}/pages/formal-verification/hwcbmc">HW-CBMC</a>.</li>
-  <li><b>After transforms</b>: run structural workflows (PDR/BMC/CEC) via <a href="{{ site.baseurl }}/pages/formal-verification/abc">ABC harness</a>.</li>
-  <li><b>Data-path corner cases</b>: encode constraints and ask for witnesses via <a href="{{ site.baseurl }}/pages/formal-verification/cvc5">CVC5</a>.</li>
-</ul>
-
-<p class="meta">This page is intentionally conservative: it lists only what is already implemented and runnable.</p>
+    <div class="card" style="border-color: rgba(255, 30, 60, 0.2);">
+      <div class="lux-pre" style="font-size: 0.8rem; margin-bottom: 2rem; color: var(--lux-crimson);">YOSYS + NEXTPNR</div>
+      <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.5rem; margin-bottom: 1rem;">Open Source Synthesis</h3>
+      <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.6;">
+        Fully open-source bitstream generation for ICE40, ECP5, and Nexus FPGAs. Complete flow from Verilog up to place & route. [System Offline]
+      </p>
+      <a href="#" class="button" style="background: transparent; color: var(--lux-crimson); border-color: var(--lux-crimson);"><span>OFFLINE</span></a>
+    </div>
+  </div>
+</div>
